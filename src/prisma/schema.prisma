@@ -1,0 +1,409 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   Int              @id @default(autoincrement())
+  username             String
+  password             String
+  email                String           @unique
+  roleId               Int              @default(3)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  ownerId              Int?
+  isActive             Boolean          @default(true)
+  authTokens           AuthToken[]
+  languages            Language[]
+  offers               Offer[]
+  paymentServices      PaymentService[] @relation("PaymentServiceCreatedBy")
+  ownedPaymentServices PaymentService[] @relation("PaymentServiceOwner")
+  updatedSettings      Setting[]
+  translations         Translation[]
+  createdBy            User?             @relation("CreatedBy", fields: [ownerId], references: [id])
+  createdUsers         User[]           @relation("CreatedBy")
+  role                 Role             @relation(fields: [roleId], references: [id])
+
+  @@map("users")
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
+
+  @@map("roles")
+}
+
+model AuthToken {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  token        String   @unique
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_tokens")
+}
+
+model PaymentService {
+  id                          Int                               @id @default(autoincrement())
+  logoUrl                     String
+  name                        String                            @unique
+  description                 String
+  serviceUrl                  String?
+  establishedAt               DateTime
+  contacts                    String[]
+  paymentPageExampleLink      String?
+  paymentPageExampleImageUrls String[]
+  cabinetExampleLink          String?
+  cabinetExampleImageUrls     String[]
+  isActive                    Boolean                           @default(true)
+  createdAt                   DateTime                          @default(now())
+  ownerId                     Int
+  updatedAt                   DateTime                          @updatedAt
+  slug                        String                            @unique
+  userId                      Int
+  email                       String?
+  countries                   PaymentServiceCountry[]
+  currencies                  PaymentServiceCurrency[]
+  supportServiceLanguages     PaymentServiceLanguage[]
+  paymentServiceOffers        PaymentServiceOffer[]             @relation("PaymentServiceOffers")
+  payInMethods                PaymentServicePaymentMethod[]     @relation("PaymentServicePayInMethods")
+  payOutMethods               PaymentServicePaymentMethod[]     @relation("PaymentServicePayOutMethods")
+  paymentSystemTypes          PaymentServicePaymentSystemType[]
+  createdBy                   User                              @relation("PaymentServiceCreatedBy", fields: [ownerId], references: [id])
+  user                        User                              @relation("PaymentServiceOwner", fields: [userId], references: [id])
+
+  @@map("payment_services")
+}
+
+model Offer {
+  id                 Int                      @id @default(autoincrement())
+  name               String
+  payInFee           Float?                      @default(0)
+  payOutFee          Float?                      @default(0)
+  payInMinLimit      Float?                   @default(0)
+  payInMaxLimit      Float?                   @default(0)
+  payOutMinLimit     Float?                   @default(0)
+  payOutMaxLimit     Float?                   @default(0)
+  support247         Boolean
+  automatics         Boolean
+  legalPerson        Boolean
+  isActive           Boolean                  @default(true)
+  createdAt          DateTime                 @default(now())
+  ownerId            Int
+  updatedAt          DateTime                 @updatedAt
+  slug               String                   @unique
+  trafficVolumeMax   Int
+  trafficVolumeMin   Int                      @default(0)
+  settleSpeedId      Int                      @default(1)
+  balanceTypes       OfferBalanceType[]
+  connectionTypes    OfferConnectionType[]
+  countries          OfferCountry[]
+  currencies         OfferCurrency[]
+  paymentSystemTypes OfferPaymentSystemType[]
+  trafficSources     OfferTrafficSource[]
+  trafficTypes       OfferTrafficType[]
+  createdBy          User                     @relation(fields: [ownerId], references: [id])
+  paymentMethods     OfferPaymentMethod[]
+  paymentServices    PaymentServiceOffer[]
+  settleSpeed        SettleSpeed              @relation(fields: [settleSpeedId], references: [id])
+  @@map("offers")
+}
+
+model OfferCountry {
+  offerId   Int
+  countryId Int
+  country   Country @relation(fields: [countryId], references: [id])
+  offer     Offer   @relation(fields: [offerId], references: [id])
+
+  @@id([offerId, countryId])
+  @@map("offer_countries")
+}
+
+model OfferCurrency {
+  offerId    Int
+  currencyId Int
+  currency   Currency @relation(fields: [currencyId], references: [id])
+  offer      Offer    @relation(fields: [offerId], references: [id])
+
+  @@id([offerId, currencyId])
+  @@map("offer_currencies")
+}
+
+model OfferTrafficSource {
+  offerId         Int
+  trafficSourceId Int
+  offer           Offer         @relation(fields: [offerId], references: [id])
+  trafficSource   TrafficSource @relation(fields: [trafficSourceId], references: [id])
+
+  @@id([offerId, trafficSourceId])
+  @@map("offer_traffic_sources")
+}
+
+model OfferTrafficType {
+  offerId       Int
+  trafficTypeId Int
+  offer         Offer       @relation(fields: [offerId], references: [id])
+  trafficType   TrafficType @relation(fields: [trafficTypeId], references: [id])
+
+  @@id([offerId, trafficTypeId])
+  @@map("offer_traffic_types")
+}
+
+model OfferBalanceType {
+  offerId       Int
+  balanceTypeId Int
+  balanceType   BalanceType  @relation(fields: [balanceTypeId], references: [id])
+  offer         Offer        @relation(fields: [offerId], references: [id])
+
+  @@id([offerId, balanceTypeId])
+  @@map("offer_balance_types")
+}
+
+model OfferConnectionType {
+  offerId          Int
+  connectionTypeId Int
+  connectionType   ConnectionType @relation(fields: [connectionTypeId], references: [id])
+  offer            Offer          @relation(fields: [offerId], references: [id])
+
+  @@id([offerId, connectionTypeId])
+  @@map("offer_connection_types")
+}
+
+model OfferPaymentSystemType {
+  offerId             Int
+  paymentSystemTypeId Int
+  offer               Offer             @relation(fields: [offerId], references: [id])
+  paymentSystemType   PaymentSystemType @relation(fields: [paymentSystemTypeId], references: [id])
+
+  @@id([offerId, paymentSystemTypeId])
+  @@map("offer_payment_system_types")
+}
+
+model PaymentServicePaymentMethod {
+  paymentServiceId Int
+  paymentMethodId  Int
+  methodType       String
+  paymentService   PaymentService @relation("PaymentServicePayInMethods", fields: [paymentServiceId], references: [id], onDelete: Cascade, map: "PaymentServicePayInMethods_fkey")
+  paymentServiceOut PaymentService @relation("PaymentServicePayOutMethods", fields: [paymentServiceId], references: [id], onDelete: Cascade)
+  paymentMethod    PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
+
+  @@id([paymentServiceId, paymentMethodId, methodType])
+  @@map("payment_service_payment_methods")
+}
+
+model PaymentServiceLanguage {
+  paymentServiceId Int
+  languageId       Int
+  language         Language       @relation(fields: [languageId], references: [id])
+  paymentService   PaymentService @relation(fields: [paymentServiceId], references: [id], onDelete: Cascade)
+
+  @@id([paymentServiceId, languageId])
+  @@map("payment_service_languages")
+}
+
+model OfferPaymentMethod {
+  offerId        Int
+  paymentMethodId Int
+  offer            Offer            @relation(fields: [offerId], references: [id])
+  paymentMethod    PaymentMethod    @relation(fields: [paymentMethodId], references: [id])
+
+  @@id([offerId, paymentMethodId])
+  @@map("offer_payment_methods")
+}
+
+model Setting {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  value         String
+  type          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  updatedBy     Int?
+  updatedByUser User?    @relation(fields: [updatedBy], references: [id])
+
+  @@map("settings")
+}
+
+model Country {
+  id              Int                     @id @default(autoincrement())
+  name            String                  @unique
+  flagUrl         String
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  offers          OfferCountry[]
+  paymentServices PaymentServiceCountry[]
+
+  @@map("countries")
+}
+
+model Currency {
+  id              Int                      @id @default(autoincrement())
+  name            String                   @unique
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  offers          OfferCurrency[]
+  paymentServices PaymentServiceCurrency[]
+
+  @@map("currencies")
+}
+
+model TrafficSource {
+  id        Int                  @id @default(autoincrement())
+  name      String               @unique
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  offers    OfferTrafficSource[]
+
+  @@map("traffic_sources")
+}
+
+model TrafficType {
+  id        Int                @id @default(autoincrement())
+  name      String             @unique
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  offers    OfferTrafficType[]
+
+  @@map("traffic_types")
+}
+
+model PaymentMethod {
+  id              Int                           @id @default(autoincrement())
+  name            String                        @unique
+  createdAt       DateTime                      @default(now())
+  updatedAt       DateTime                      @updatedAt
+  offers          OfferPaymentMethod[]
+  paymentServices PaymentServicePaymentMethod[]
+
+  @@map("payment_methods")
+}
+
+model BalanceType {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  offers    OfferBalanceType[]
+
+  @@map("balance_types")
+}
+
+model ExchangeType {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("exchange_types")
+}
+
+model ConnectionType {
+  id        Int                   @id @default(autoincrement())
+  name      String                @unique
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+  offers    OfferConnectionType[]
+
+  @@map("connection_types")
+}
+
+model Language {
+  id              Int                      @id @default(autoincrement())
+  name            String                   @unique
+  shortName       String                   @unique
+  flagUrl         String
+  code            String                   @unique
+  isActive        Boolean                  @default(true)
+  ownerId         Int
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  createdBy       User                     @relation(fields: [ownerId], references: [id])
+  paymentServices PaymentServiceLanguage[]
+
+  @@map("languages")
+}
+
+model Translation {
+  id           Int      @id @default(autoincrement())
+  entityType   String
+  entityId     Int
+  entityField  String
+  languageCode String
+  value        String
+  ownerId      Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    User?    @relation(fields: [ownerId], references: [id])
+
+  @@index([entityType, entityId, entityField, languageCode], map: "translations_lookup")
+  @@map("translations")
+}
+
+model PaymentServiceOffer {
+  paymentServiceId Int
+  offerId          Int
+  offer            Offer          @relation(fields: [offerId], references: [id])
+  paymentService   PaymentService @relation("PaymentServiceOffers", fields: [paymentServiceId], references: [id], onDelete: Cascade)
+
+  @@id([paymentServiceId, offerId])
+  @@map("payment_service_offers")
+}
+
+model PaymentServiceCountry {
+  paymentServiceId Int
+  countryId        Int
+  country          Country        @relation(fields: [countryId], references: [id])
+  paymentService   PaymentService @relation(fields: [paymentServiceId], references: [id], onDelete: Cascade)
+
+  @@id([paymentServiceId, countryId])
+  @@map("payment_service_countries")
+}
+
+model PaymentServiceCurrency {
+  paymentServiceId Int
+  currencyId       Int
+  currency         Currency       @relation(fields: [currencyId], references: [id])
+  paymentService   PaymentService @relation(fields: [paymentServiceId], references: [id], onDelete: Cascade)
+
+  @@id([paymentServiceId, currencyId])
+  @@map("payment_service_currencies")
+}
+
+model PaymentServicePaymentSystemType {
+  paymentServiceId    Int
+  paymentSystemTypeId Int
+  paymentService      PaymentService    @relation(fields: [paymentServiceId], references: [id], onDelete: Cascade)
+  paymentSystemType   PaymentSystemType @relation(fields: [paymentSystemTypeId], references: [id])
+
+  @@id([paymentServiceId, paymentSystemTypeId])
+  @@map("payment_service_payment_system_types")
+}
+
+model PaymentSystemType {
+  id              Int                               @id @default(autoincrement())
+  name            String                            @unique
+  createdAt       DateTime                          @default(now())
+  updatedAt       DateTime                          @updatedAt
+  offers          OfferPaymentSystemType[]
+  paymentServices PaymentServicePaymentSystemType[]
+
+  @@map("payment_system_types")
+}
+
+model SettleSpeed {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  offers    Offer[]
+  @@map("settle_speeds")
+}

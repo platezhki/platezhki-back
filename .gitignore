@@ -1,0 +1,9 @@
+.env
+node_modules
+dist
+/src/generated/prisma
+postman-collection.json
+public/
+docs/swagger.json
+.cursor
+.idea
