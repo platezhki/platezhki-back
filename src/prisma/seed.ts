@@ -95,6 +95,10 @@ async function main() {
       { name: 'C2C' },
       { name: 'SBP' },
       { name: 'QR' },
+      { name: 'Mobile' },
+      { name: 'Crypto address' },
+      { name: 'E-Wallet' },
+      { name: 'Virtual Cards' },
     ],
     skipDuplicates: true,
   });
@@ -297,7 +301,7 @@ async function main() {
     // Create PaymentServices with relations
     for (const serviceData of samplePaymentServices) {
       const { countries, currencies, paymentSystemTypes, payInMethods, payOutMethods, languageSupport, ...service } = serviceData;
-      
+
       const createdService = await prisma.paymentService.create({
         data: {
           ...service,
@@ -312,13 +316,13 @@ async function main() {
           },
           payInMethods: {
             create: [
-              ...payInMethods.map(paymentMethodId => ({ 
-                paymentMethodId, 
-                methodType: 'payin' 
+              ...payInMethods.map(paymentMethodId => ({
+                paymentMethodId,
+                methodType: 'payin'
               })),
-              ...payOutMethods.map(paymentMethodId => ({ 
-                paymentMethodId, 
-                methodType: 'payout' 
+              ...payOutMethods.map(paymentMethodId => ({
+                paymentMethodId,
+                methodType: 'payout'
               }))
             ]
           },

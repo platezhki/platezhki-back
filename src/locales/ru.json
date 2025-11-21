@@ -13,7 +13,8 @@
     "token_refreshed": "Токен успешно обновлен",
     "logout_success": "Выход выполнен успешно",
     "unauthorized": "Неавторизованный доступ",
-    "insufficient_permissions": "Недостаточно прав для выполнения этого действия"
+    "insufficient_permissions": "Недостаточно прав для выполнения этого действия",
+    "role_not_exists": "Роль не существует"
   },
   "validation": {
     "validation_failed": "Ошибка валидации",
@@ -141,12 +142,15 @@
     "username_exists": "Пользователь с таким именем уже существует",
     "email_exists": "Пользователь с таким email уже существует"
   },
-  "role": {
+  "roles": {
     "created_successfully": "Роль успешно создана",
     "updated_successfully": "Роль успешно обновлена",
     "retrieved_successfully": "Роли успешно получены",
-    "not_found": "Роль не найдена",
-    "name_exists": "Роль с таким именем уже существует"
+    "retrieval_failed": "Не удалось получить роли",
+    "creation_failed": "Не удалось создать роль",
+    "update_failed": "Не удалось обновить роль",
+    "name_exists": "Роль с таким именем уже существует",
+    "not_found": "Роль не найдена"
   },
   "setting": {
     "created_successfully": "Настройка успешно создана",
@@ -158,5 +162,17 @@
   "dictionaries": {
     "retrieved_successfully": "Словари успешно получены",
     "retrieval_failed": "Не удалось получить словари"
+  },
+  "user_rating": {
+    "cannot_rate_self": "Вы не можете оценивать самого себя",
+    "rating_saved": "Оценка успешно сохранена",
+    "ratings_retrieved": "Оценки успешно получены",
+    "average_retrieved": "Средняя оценка успешно получена",
+    "rating_deleted": "Оценка успешно удалена",
+    "rating_not_found": "Оценка не найдена",
+    "rating_failed": "Не удалось сохранить оценку",
+    "get_ratings_failed": "Не удалось получить оценки",
+    "get_average_failed": "Не удалось получить среднюю оценку",
+    "delete_failed": "Не удалось удалить оценку"
   }
 }

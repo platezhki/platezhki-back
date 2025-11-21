@@ -39,6 +39,9 @@ export const getPaymentServicesSchema = z.object({
     currencyId: z.array(z.number()).optional(),
     paymentMethodId: z.array(z.number()).optional(),
     q: z.string().optional(),
+    // Sorting
+    sortColumn: z.enum(['id', 'createdAt', 'name', 'averageRating']).optional().default('id'),
+    order: z.enum(['ASC', 'DESC']).optional().default('DESC'),
   }).optional(),
 });
 
@@ -184,4 +187,3 @@ export const updatePaymentServiceBodySchema = z.object({
   slug: z.string().min(1, __("validation.slug_required")).optional(),
   isActive: z.boolean().optional(),
 });
-

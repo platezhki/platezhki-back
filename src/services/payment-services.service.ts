@@ -26,13 +26,31 @@ const transformPaymentService = (paymentService: any) => {
         })) || [],
         supportServiceLanguages: paymentService?.supportServiceLanguages?.map((l: any) => l.language) || []
     };
-    
+
     // Ensure id is preserved
     if (paymentService.id) {
         transformed.id = paymentService.id;
     }
-    
+
     return transformed;
+};
+
+// Helper: attach ownerAverageRating to a payment service object (already transformed)
+const attachOwnerAverageRating = async (service: any) => {
+    try {
+        // If `user` relation included with denormalized fields, use them directly
+        if (service?.user) {
+            return { ...service, ownerAverageRating: { average: service.user.averageRating ?? 0, count: service.user.ratingsCount ?? 0 } };
+        }
+
+        const ownerId = service?.ownerId;
+        if (!ownerId) return { ...service, ownerAverageRating: { average: 0, count: 0 } };
+
+        const agg = await prisma.userRating.aggregate({ where: { ratedUserId: ownerId }, _avg: { score: true }, _count: { _all: true } });
+        return { ...service, ownerAverageRating: { average: agg._avg.score ?? 0, count: agg._count._all } };
+    } catch (error) {
+        return { ...service, ownerAverageRating: { average: 0, count: 0 } };
+    }
 };
 
 export const createPaymentService = async (data: any, userRoleId?: number, userId?: number) => {
@@ -73,7 +91,7 @@ export const createPaymentService = async (data: any, userRoleId?: number, userI
             // Check if items are file uploads or URLs
             const fileUploads = data.paymentPageExampleImageUrls.filter((item: any) => item && typeof item === 'object' && item.file);
             const urlStrings = data.paymentPageExampleImageUrls.filter((item: any) => typeof item === 'string');
-            
+
             if (fileUploads.length > 0) {
                 const newFileUrls = saveBase64Files(fileUploads, 'uploads/payment-pages');
                 paymentPageExampleImageUrls = [...urlStrings, ...newFileUrls];
@@ -88,7 +106,7 @@ export const createPaymentService = async (data: any, userRoleId?: number, userI
             // Check if items are file uploads or URLs
             const fileUploads = data.cabinetExampleImageUrls.filter((item: any) => item && typeof item === 'object' && item.file);
             const urlStrings = data.cabinetExampleImageUrls.filter((item: any) => typeof item === 'string');
-            
+
             if (fileUploads.length > 0) {
                 const newFileUrls = saveBase64Files(fileUploads, 'uploads/cabinets');
                 cabinetExampleImageUrls = [...urlStrings, ...newFileUrls];
@@ -115,17 +133,17 @@ export const createPaymentService = async (data: any, userRoleId?: number, userI
             const allUserPaymentServices = await prisma.paymentService.findMany({
                 where: { ownerId: userId }
             });
-            
+
             if (allUserPaymentServices.length > 1) {
                 // First, try to find a payment service with the same name (if user is trying to update an existing one)
                 let targetService = allUserPaymentServices.find(service => service.name === data.name);
-                
+
                 // If no service with the same name, use the one with the lowest ID (oldest)
                 if (!targetService) {
                     const sortedServices = allUserPaymentServices.sort((a, b) => a.id - b.id);
                     targetService = sortedServices[0];
                 }
-                
+
                 // Update the target service
                 return await updatePaymentService(targetService.id, data, userRoleId, userId);
             } else {
@@ -209,15 +227,15 @@ export const createPaymentService = async (data: any, userRoleId?: number, userI
                     create: data.paymentSystemType.map((paymentSystemTypeId: number) => ({ paymentSystemTypeId }))
                 },
                 payInMethods: {
-                    create: data.payInMethods.map((paymentMethodId: number) => ({ 
-                        paymentMethodId, 
-                        methodType: 'payIn' 
+                    create: data.payInMethods.map((paymentMethodId: number) => ({
+                        paymentMethodId,
+                        methodType: 'payIn'
                     }))
                 },
                 payOutMethods: {
-                    create: data.payOutMethods.map((paymentMethodId: number) => ({ 
-                        paymentMethodId, 
-                        methodType: 'payOut' 
+                    create: data.payOutMethods.map((paymentMethodId: number) => ({
+                        paymentMethodId,
+                        methodType: 'payOut'
                     }))
                 },
                 supportServiceLanguages: {
@@ -241,11 +259,13 @@ export const createPaymentService = async (data: any, userRoleId?: number, userI
                     }
                 },
                 payInMethods: {
+                    where: { methodType: 'payIn' },
                     include: {
                         paymentMethod: true
                     }
                 },
                 payOutMethods: {
+                    where: { methodType: 'payOut' },
                     include: {
                         paymentMethod: true
                     }
@@ -273,7 +293,7 @@ export const getPaymentServices = async (filters?: z.infer<typeof getPaymentServ
 
         // Build where clause
         const where: any = {};
-        
+
         if (filters?.isActive !== undefined) {
             where.isActive = Boolean(filters.isActive);
         }
@@ -303,18 +323,15 @@ export const getPaymentServices = async (filters?: z.infer<typeof getPaymentServ
                 {
                     payInMethods: {
                         some: {
-                            paymentMethodId: {
-                                in: filters.paymentMethodId
-                            }
+                            paymentMethodId: { in: filters.paymentMethodId },
+                            methodType: 'payIn'
                         }
                     }
                 },
                 {
-                    payInMethods: {
+                    payOutMethods: {
                         some: {
-                            paymentMethodId: {
-                                in: filters.paymentMethodId
-                            },
+                            paymentMethodId: { in: filters.paymentMethodId },
                             methodType: 'payOut'
                         }
                     }
@@ -329,55 +346,84 @@ export const getPaymentServices = async (filters?: z.infer<typeof getPaymentServ
             };
         }
 
+        // Build orderBy clause for sorting
+        let orderBy: any = undefined;
+        const sortColumn = ((filters as any)?.sortColumn || 'id') as any;
+        const order = (((filters as any)?.order || 'DESC') as string).toLowerCase();
+        if (String(sortColumn) === 'averageRating') {
+            orderBy = [
+                { user: { averageRating: order } },
+                { user: { ratingsCount: order } }
+            ];
+        } else if (sortColumn) {
+            orderBy = { [sortColumn]: order };
+        }
+
         // Get total count
         const total = await prisma.paymentService.count({ where });
 
-        // Get payment services with relations
+        // Get payment services with relations (support DB-side sorting)
         const paymentServices = await prisma.paymentService.findMany({
-                where,
-                skip,
-            take: limit,
-            include: {
-                countries: {
-                    include: {
-                        country: true
-                    }
-                },
-                currencies: {
-                    include: {
-                        currency: true
-                    }
-                },
-                paymentSystemTypes: {
-                    include: {
-                        paymentSystemType: true
-                    }
-                },
-                payInMethods: {
-                    include: {
-                        paymentMethod: true
-                    }
-                },
-                payOutMethods: {
-                    include: {
-                        paymentMethod: true
-                    }
-                },
-                supportServiceLanguages: {
-                    include: {
-                        language: true
+                 where,
+                 skip,
+             take: limit,
+             orderBy: orderBy,
+             include: ({
+                 countries: {
+                     include: {
+                         country: true
+                     }
+                 },
+                 currencies: {
+                     include: {
+                         currency: true
+                     }
+                 },
+                 paymentSystemTypes: {
+                     include: {
+                         paymentSystemType: true
+                     }
+                 },
+                 payInMethods: {
+                     where: { methodType: 'payIn' },
+                     include: {
+                         paymentMethod: true
+                     }
+                 },
+                 payOutMethods: {
+                     where: { methodType: 'payOut' },
+                     include: {
+                         paymentMethod: true
+                     }
+                 },
+                 supportServiceLanguages: {
+                     include: {
+                         language: true
+                     }
+                 },
+                user: {
+                    select: {
+                        id: true,
+                        averageRating: true,
+                        ratingsCount: true
                     }
                 }
-            }
-        });
+            } as any)
+         });
 
         // Transform the response to remove duplicates and clean up structure
         const cleanedPaymentServices = paymentServices.map(service => transformPaymentService(service));
 
+        // Attach ownerAverageRating to each payment service using denormalized user fields when available
+        const servicesWithRatings = cleanedPaymentServices.map((s: any) => ({
+            ...s,
+            ownerAverageRating: s.user ? { average: s.user.averageRating ?? 0, count: s.user.ratingsCount ?? 0 } : { average: 0, count: 0 }
+        }));
+
         const pages = Math.ceil(total / limit);
 
         return {
-            data: cleanedPaymentServices,
+            data: servicesWithRatings,
             pagination: {
                 page,
                 limit,
@@ -412,11 +458,13 @@ export const getPaymentServiceById = async (id: number) => {
                     }
                 },
                 payInMethods: {
+                    where: { methodType: 'payIn' },
                     include: {
                         paymentMethod: true
                     }
                 },
                 payOutMethods: {
+                    where: { methodType: 'payOut' },
                     include: {
                         paymentMethod: true
                     }
@@ -434,7 +482,10 @@ export const getPaymentServiceById = async (id: number) => {
         }
 
         // Transform the response to remove duplicates and clean up structure
-        return transformPaymentService(paymentService);
+        const transformedService = transformPaymentService(paymentService);
+
+        // Attach owner average rating
+        return await attachOwnerAverageRating(transformedService);
     } catch (error) {
         throw error;
     }
@@ -484,7 +535,7 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
                 // Check if items are file uploads or URLs
                 const fileUploads = data.paymentPageExampleImageUrls.filter((item: any) => item.file);
                 const urlStrings = data.paymentPageExampleImageUrls.filter((item: any) => typeof item === 'string');
-                
+
                 if (fileUploads.length > 0) {
                     const newFileUrls = saveBase64Files(fileUploads, 'uploads/payment-pages');
                     paymentPageExampleImageUrls = [...urlStrings, ...newFileUrls];
@@ -503,7 +554,7 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
                 // Check if items are file uploads or URLs
                 const fileUploads = data.cabinetExampleImageUrls.filter((item: any) => item.file);
                 const urlStrings = data.cabinetExampleImageUrls.filter((item: any) => typeof item === 'string');
-                
+
                 if (fileUploads.length > 0) {
                     const newFileUrls = saveBase64Files(fileUploads, 'uploads/cabinets');
                     cabinetExampleImageUrls = [...urlStrings, ...newFileUrls];
@@ -537,7 +588,7 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
         // Check for name conflicts if name is being updated
         if (data.name && data.name !== existingService.name) {
             const existingByName = await prisma.paymentService.findFirst({
-                where: { 
+                where: {
                     name: data.name,
                     id: { not: id }
                 }
@@ -560,7 +611,7 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
         // Check for slug conflicts if slug is being updated
         if (slug !== existingService.slug) {
             const existingBySlug = await prisma.paymentService.findFirst({
-                where: { 
+                where: {
                     slug,
                     id: { not: id }
                 }
@@ -615,11 +666,13 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
                     }
                 },
                 payInMethods: {
+                    where: { methodType: 'payIn' },
                     include: {
                         paymentMethod: true
                     }
                 },
                 payOutMethods: {
+                    where: { methodType: 'payOut' },
                     include: {
                         paymentMethod: true
                     }
@@ -681,7 +734,7 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
         if (data.payInMethods || data.payOutMethods) {
             // Delete existing payment method relations
             await prisma.paymentServicePaymentMethod.deleteMany({
-                where: { 
+                where: {
                     paymentServiceId: id
                 }
             });
@@ -728,38 +781,40 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
         // Get the final updated service with all relations
         const finalService = await prisma.paymentService.findUnique({
             where: { id },
-            include: {
-                countries: {
-                    include: {
-                        country: true
-                    }
-                },
-                currencies: {
-                    include: {
-                        currency: true
-                    }
-                },
-                paymentSystemTypes: {
-                    include: {
-                        paymentSystemType: true
-                    }
-                },
-                payInMethods: {
-                    include: {
-                        paymentMethod: true
-                    }
-                },
-                payOutMethods: {
-                    include: {
-                        paymentMethod: true
-                    }
-                },
-                supportServiceLanguages: {
-                    include: {
-                        language: true
-                    }
-                }
-            }
+            include: ({
+                 countries: {
+                     include: {
+                         country: true
+                     }
+                 },
+                 currencies: {
+                     include: {
+                         currency: true
+                     }
+                 },
+                 paymentSystemTypes: {
+                     include: {
+                         paymentSystemType: true
+                     }
+                 },
+                 payInMethods: {
+                     where: { methodType: 'payIn' },
+                     include: {
+                         paymentMethod: true
+                     }
+                 },
+                 payOutMethods: {
+                     where: { methodType: 'payOut' },
+                     include: {
+                         paymentMethod: true
+                     }
+                 },
+                 supportServiceLanguages: {
+                     include: {
+                         language: true
+                     }
+                 }
+            } as any)
         });
 
         // Transform the response to remove duplicates and clean up structure
@@ -809,11 +864,13 @@ export const activatePaymentService = async (id: number, userRoleId?: number, us
                     }
                 },
                 payInMethods: {
+                    where: { methodType: 'payIn' },
                     include: {
                         paymentMethod: true
                     }
                 },
                 payOutMethods: {
+                    where: { methodType: 'payOut' },
                     include: {
                         paymentMethod: true
                     }
@@ -873,11 +930,13 @@ export const deactivatePaymentService = async (id: number, userRoleId?: number, 
                     }
                 },
                 payInMethods: {
+                    where: { methodType: 'payIn' },
                     include: {
                         paymentMethod: true
                     }
                 },
                 payOutMethods: {
+                    where: { methodType: 'payOut' },
                     include: {
                         paymentMethod: true
                     }
@@ -945,11 +1004,13 @@ export const getUserPaymentService = async (ownerId: number) => {
                     }
                 },
                 payInMethods: {
+                    where: { methodType: 'payIn' },
                     include: {
                         paymentMethod: true
                     }
                 },
                 payOutMethods: {
+                    where: { methodType: 'payOut' },
                     include: {
                         paymentMethod: true
                     }
@@ -967,7 +1028,10 @@ export const getUserPaymentService = async (ownerId: number) => {
         }
 
         // Transform the response to remove duplicates and clean up structure
-        return transformPaymentService(paymentService);
+        const transformedService = transformPaymentService(paymentService);
+
+        // Attach owner average rating
+        return await attachOwnerAverageRating(transformedService);
     } catch (error) {
         throw error;
     }
@@ -977,37 +1041,39 @@ export const getPaymentServiceBySlug = async (slug: string) => {
     try {
         const paymentService = await prisma.paymentService.findUnique({
             where: { slug },
-            include: {
-                countries: {
-                    include: {
-                        country: true
-                    }
-                },
-                currencies: {
-                    include: {
-                        currency: true
-                    }
-                },
-                paymentSystemTypes: {
-                    include: {
-                        paymentSystemType: true
-                    }
-                },
-                payInMethods: {
-                    include: {
-                        paymentMethod: true
-                    }
-                },
-                payOutMethods: {
-                    include: {
-                        paymentMethod: true
-                    }
-                },
-                supportServiceLanguages: {
-                    include: {
-                        language: true
-                    }
-                },
+            include: ({
+                 countries: {
+                     include: {
+                         country: true
+                     }
+                 },
+                 currencies: {
+                     include: {
+                         currency: true
+                     }
+                 },
+                 paymentSystemTypes: {
+                     include: {
+                         paymentSystemType: true
+                     }
+                 },
+                 payInMethods: {
+                     where: { methodType: 'payIn' },
+                     include: {
+                         paymentMethod: true
+                     }
+                 },
+                 payOutMethods: {
+                     where: { methodType: 'payOut' },
+                     include: {
+                         paymentMethod: true
+                     }
+                 },
+                 supportServiceLanguages: {
+                     include: {
+                         language: true
+                     }
+                 },
                 paymentServiceOffers: {
                     where: { offer: { isActive: true } },
                     include: {
@@ -1053,13 +1119,20 @@ export const getPaymentServiceBySlug = async (slug: string) => {
                                         balanceType: true
                                     }
                                 },
-                                settleSpeed: true,
-                            }
-                        }
-                    }
-                }
-            }
-        });
+                                createdBy: {
+                                    select: {
+                                        id: true,
+                                        averageRating: true,
+                                        ratingsCount: true
+                                    }
+                                },
+                                  settleSpeed: true,
+                             }
+                         }
+                     }
+                 }
+             } as any)
+         });
 
         if (!paymentService) {
             throw new Error(__('payment_service.not_found'));
@@ -1067,9 +1140,10 @@ export const getPaymentServiceBySlug = async (slug: string) => {
 
         // Transform the response to remove duplicates and clean up structure
         const transformedService = transformPaymentService(paymentService);
-        
+
         // Transform offers and remove paymentServices from each offer
-        const transformedOffers = paymentService.paymentServiceOffers.map(psOffer => {
+        const ps = paymentService as any;
+        const transformedOffers = (ps.paymentServiceOffers || []).map((psOffer: any) => {
             const offer = psOffer.offer;
             return {
                 ...offer,
@@ -1084,9 +1158,18 @@ export const getPaymentServiceBySlug = async (slug: string) => {
             };
         });
 
+        // Attach ownerAverageRating to each offer using denormalized fields if present
+        const transformedOffersWithRatings = transformedOffers.map((offer: any) => ({
+            ...offer,
+            ownerAverageRating: offer.createdBy ? { average: offer.createdBy.averageRating ?? 0, count: offer.createdBy.ratingsCount ?? 0 } : { average: 0, count: 0 }
+        }));
+
+        // Attach ownerAverageRating to the payment service itself (use denormalized user if present)
+        const serviceWithRating = await attachOwnerAverageRating(transformedService as any);
+
         return {
-            ...transformedService,
-            offers: transformedOffers
+            ...serviceWithRating,
+            offers: transformedOffersWithRatings
         };
     } catch (error) {
         throw error;

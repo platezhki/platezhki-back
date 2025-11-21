@@ -182,3 +182,36 @@ export const updateUser = async (userId: number, updateData: {
         throw error;
     }
 };
+
+// Update or create user activity record for a device (cookieHash). If userId provided, save it too.
+export const touchUserActivity = async (cookieHash: string, userId?: number) => {
+    try {
+        const now = new Date();
+        // Use prisma.userActivity upsert — cast prisma as any in case client not generated yet
+        const p: any = prisma as any;
+        const existing = await p.userActivity.findUnique({ where: { cookieHash } });
+        if (existing) {
+            await p.userActivity.update({ where: { cookieHash }, data: { lastSeenAt: now, userId: userId ?? existing.userId } });
+        } else {
+            await p.userActivity.create({ data: { cookieHash, userId: userId ?? null, lastSeenAt: now } });
+        }
+        return true;
+    } catch (error) {
+        console.error('touchUserActivity error', error);
+        return false;
+    }
+};
+
+// Count unique active user activities in the last `minutes` minutes
+export const countActiveUsers = async (minutes = 5) => {
+    try {
+        const p: any = prisma as any;
+        const since = new Date(Date.now() - minutes * 60 * 1000);
+        // Count distinct cookieHash where lastSeenAt >= since
+        const count = await p.userActivity.count({ where: { lastSeenAt: { gte: since } } });
+        return count;
+    } catch (error) {
+        console.error('countActiveUsers error', error);
+        return 0;
+    }
+};

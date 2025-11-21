@@ -14,6 +14,9 @@ model User {
   password             String
   email                String           @unique
   roleId               Int              @default(3)
+  // Average rating aggregate fields (kept denormalized for fast queries)
+  averageRating        Float            @default(0)
+  ratingsCount         Int              @default(0)
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
   ownerId              Int?
@@ -25,9 +28,12 @@ model User {
   ownedPaymentServices PaymentService[] @relation("PaymentServiceOwner")
   updatedSettings      Setting[]
   translations         Translation[]
-  createdBy            User?             @relation("CreatedBy", fields: [ownerId], references: [id])
+  createdBy            User?            @relation("CreatedBy", fields: [ownerId], references: [id])
   createdUsers         User[]           @relation("CreatedBy")
   role                 Role             @relation(fields: [roleId], references: [id])
+  // Ratings relations
+  ratingsGiven         UserRating[]     @relation("UserRatingsGiven")
+  ratingsReceived      UserRating[]     @relation("UserRatingsReceived")
 
   @@map("users")
 }
@@ -87,8 +93,8 @@ model PaymentService {
 model Offer {
   id                 Int                      @id @default(autoincrement())
   name               String
-  payInFee           Float?                      @default(0)
-  payOutFee          Float?                      @default(0)
+  payInFee           Float?                   @default(0)
+  payOutFee          Float?                   @default(0)
   payInMinLimit      Float?                   @default(0)
   payInMaxLimit      Float?                   @default(0)
   payOutMinLimit     Float?                   @default(0)
@@ -115,6 +121,7 @@ model Offer {
   paymentMethods     OfferPaymentMethod[]
   paymentServices    PaymentServiceOffer[]
   settleSpeed        SettleSpeed              @relation(fields: [settleSpeedId], references: [id])
+
   @@map("offers")
 }
 
@@ -161,8 +168,8 @@ model OfferTrafficType {
 model OfferBalanceType {
   offerId       Int
   balanceTypeId Int
-  balanceType   BalanceType  @relation(fields: [balanceTypeId], references: [id])
-  offer         Offer        @relation(fields: [offerId], references: [id])
+  balanceType   BalanceType @relation(fields: [balanceTypeId], references: [id])
+  offer         Offer       @relation(fields: [offerId], references: [id])
 
   @@id([offerId, balanceTypeId])
   @@map("offer_balance_types")
@@ -189,12 +196,12 @@ model OfferPaymentSystemType {
 }
 
 model PaymentServicePaymentMethod {
-  paymentServiceId Int
-  paymentMethodId  Int
-  methodType       String
-  paymentService   PaymentService @relation("PaymentServicePayInMethods", fields: [paymentServiceId], references: [id], onDelete: Cascade, map: "PaymentServicePayInMethods_fkey")
+  paymentServiceId  Int
+  paymentMethodId   Int
+  methodType        String
+  paymentService    PaymentService @relation("PaymentServicePayInMethods", fields: [paymentServiceId], references: [id], onDelete: Cascade, map: "PaymentServicePayInMethods_fkey")
   paymentServiceOut PaymentService @relation("PaymentServicePayOutMethods", fields: [paymentServiceId], references: [id], onDelete: Cascade)
-  paymentMethod    PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
+  paymentMethod     PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
 
   @@id([paymentServiceId, paymentMethodId, methodType])
   @@map("payment_service_payment_methods")
@@ -211,10 +218,10 @@ model PaymentServiceLanguage {
 }
 
 model OfferPaymentMethod {
-  offerId        Int
+  offerId         Int
   paymentMethodId Int
-  offer            Offer            @relation(fields: [offerId], references: [id])
-  paymentMethod    PaymentMethod    @relation(fields: [paymentMethodId], references: [id])
+  offer           Offer         @relation(fields: [offerId], references: [id])
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
 
   @@id([offerId, paymentMethodId])
   @@map("offer_payment_methods")
@@ -288,10 +295,10 @@ model PaymentMethod {
 }
 
 model BalanceType {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int                @id @default(autoincrement())
+  name      String             @unique
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
   offers    OfferBalanceType[]
 
   @@map("balance_types")
@@ -405,5 +412,32 @@ model SettleSpeed {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   offers    Offer[]
+
   @@map("settle_speeds")
+}
+
+model UserRating {
+  id          Int      @id @default(autoincrement())
+  raterId     Int
+  ratedUserId Int
+  score       Int      @default(0)
+  comment     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rater     User @relation("UserRatingsGiven", fields: [raterId], references: [id], onDelete: Cascade)
+  ratedUser User @relation("UserRatingsReceived", fields: [ratedUserId], references: [id], onDelete: Cascade)
+
+  @@index([ratedUserId], map: "user_ratings_rated_user_idx")
+  @@map("user_ratings")
+}
+
+model UserActivity {
+  id         Int      @id @default(autoincrement())
+  cookieHash String   @unique
+  userId     Int?
+  lastSeenAt DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@map("user_activities")
 }

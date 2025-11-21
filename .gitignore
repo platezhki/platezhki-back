@@ -7,3 +7,6 @@ public/
 docs/swagger.json
 .cursor
 .idea
+
+/src/generated/prisma
+/src/prisma/migrations

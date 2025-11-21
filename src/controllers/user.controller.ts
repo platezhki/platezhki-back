@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { getUser, getUsers, getCurrentUser, updateUser, createUser } from "../services/user.service";
+import { touchUserActivity, countActiveUsers } from "../services/user.service";
 import { __ } from "../utils/i18n";
 
 export const getUsersHandler = async (req: Request, res: Response) => {
@@ -47,7 +48,7 @@ export const getCurrentUserHandler = async (req: Request, res: Response) => {
     // Check if user is authenticated - FIRST THING, NO TRY/CATCH
     const user = (req as any).user;
     const userId = user?.userId;
-    
+
     // Return 401 immediately if no authentication
     if (!user || !userId) {
         return res.status(401).json({
@@ -85,7 +86,7 @@ export const createUserHandler = async (req: Request, res: Response) => {
         // Check if user is authenticated
         const user = (req as any).user;
         const userId = user?.userId;
-        
+
         // Return 401 if no user or no userId
         if (!user || !userId) {
             return res.status(401).json({
@@ -131,7 +132,7 @@ export const updateUserHandler = async (req: Request, res: Response) => {
         // Check if user is authenticated
         const user = (req as any).user;
         const userId = user?.userId;
-        
+
         // Return 401 if no user or no userId
         if (!user || !userId) {
             return res.status(401).json({
@@ -178,5 +179,37 @@ export const updateUserHandler = async (req: Request, res: Response) => {
                 message: __('user.user_update_failed')
             });
         }
+    }
+};
+
+// Returns number of active users (unique devices) seen within the last 5 minutes.
+// Also sets an httpOnly cookie `pa_device` with a unique hash on first visit.
+export const getActiveUsersCountHandler = async (req: Request, res: Response) => {
+    try {
+        const cookieName = 'pa_device';
+        let cookieHash = req.cookies?.[cookieName] as string | undefined;
+
+        // If no cookie, generate one and set httpOnly cookie
+        if (!cookieHash) {
+            const crypto = await import('crypto');
+            cookieHash = crypto.randomBytes(20).toString('hex');
+            // Set cookie for 30 days
+            res.cookie(cookieName, cookieHash, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
+        }
+
+        // If user authenticated, attach userId
+        const user = (req as any).user;
+        const userId = user?.userId ? Number(user.userId) : undefined;
+
+        // Touch activity
+        await touchUserActivity(cookieHash, userId);
+
+        // Count active in last 5 minutes
+        const activeCount = await countActiveUsers(5);
+
+        res.status(200).json({ success: true, data: { activeCount } });
+    } catch (error) {
+        console.error('getActiveUsersCountHandler error', error);
+        res.status(500).json({ success: false, message: __('user.active_count_failed') });
     }
 };

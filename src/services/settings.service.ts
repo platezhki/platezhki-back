@@ -35,7 +35,7 @@ export const getSettings = async (filters: any = {}) => {
         const skip = (Number(page) - 1) * Number(limit);
 
         const where: any = {};
-        
+
         if (name) {
             where.name = {
                 contains: name,
@@ -151,8 +151,8 @@ export const updateSetting = async (id: number, data: any) => {
         });
 
         return setting;
-    } catch (error) {
-        if (error.code === 'P2025') {
+    } catch (error: any) {
+        if (error?.code === 'P2025') {
             throw new Error(__('settings.not_found'));
         }
         throw error;

@@ -19,7 +19,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-  
+
   schemas:
     User:
       type: object
@@ -42,7 +42,7 @@ components:
           example: true
         role:
           $ref: '#/components/schemas/Role'
-    
+
     Role:
       type: object
       properties:
@@ -52,7 +52,7 @@ components:
         name:
           type: string
           example: USER
-    
+
     AuthTokens:
       type: object
       properties:
@@ -95,6 +95,17 @@ components:
           type: string
           format: uri
           example: "https://qiwi.com/payment-example"
+        ownerAverageRating:
+          type: object
+          nullable: true
+          properties:
+            average:
+              type: number
+              format: float
+              example: 4.5
+            count:
+              type: integer
+              example: 12
         paymentPageExampleImageUrls:
           type: array
           items:
@@ -151,7 +162,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Language'
-    
+
     Country:
       type: object
       properties:
@@ -164,7 +175,7 @@ components:
         flagUrl:
           type: string
           example: "flags/ru.png"
-    
+
     Currency:
       type: object
       properties:
@@ -174,7 +185,7 @@ components:
         name:
           type: string
           example: "RUB"
-    
+
     PaymentSystemType:
       type: object
       properties:
@@ -184,7 +195,7 @@ components:
         name:
           type: string
           example: "P2P Exchange"
-    
+
     Offer:
       type: object
       properties:
@@ -285,7 +296,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BalanceType'
-    
+        ownerAverageRating:
+          type: object
+          nullable: true
+          properties:
+            average:
+              type: number
+              format: float
+              example: 4.5
+            count:
+              type: integer
+              example: 12
+
     TrafficSource:
       type: object
       properties:
@@ -303,7 +325,7 @@ components:
           type: string
           format: date-time
           example: "2023-01-01T00:00:00.000Z"
-    
+
     TrafficType:
       type: object
       properties:
@@ -321,7 +343,7 @@ components:
           type: string
           format: date-time
           example: "2023-01-01T00:00:00.000Z"
-    
+
     ConnectionType:
       type: object
       properties:
@@ -339,7 +361,7 @@ components:
           type: string
           format: date-time
           example: "2023-01-01T00:00:00.000Z"
-    
+
     BalanceType:
       type: object
       properties:
@@ -357,7 +379,7 @@ components:
           type: string
           format: date-time
           example: "2023-01-01T00:00:00.000Z"
-    
+
     OfferCreateRequest:
       type: object
       required:
@@ -377,232 +399,90 @@ components:
         - automatics
         - trafficSources
         - trafficTypes
-        - connectionTypes
-        - legalPerson
-        - balanceTypes
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 255
-          example: "Premium Exchange Offer"
-        countries:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2, 3]
-        currencies:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        paymentSystemTypes:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        trafficVolumeMin:
-          type: integer
-          minimum: 0
-          example: 0
-        trafficVolumeMax:
-          type: integer
-          minimum: 0
-          example: 10000
-        paymentMethodId:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1]
-        payInFee:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 100
-          example: 2.0
-        payOutFee:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 100
-          example: 3.0
-        settleSpeedId:
-          type: integer
-          minimum: 1
-          example: 1
-        payInMinLimit:
-          type: number
-          format: float
-          minimum: 0
-          example: 10.0
-        payInMaxLimit:
-          type: number
-          format: float
-          minimum: 0
-          example: 5000.0
-        payOutMinLimit:
-          type: number
-          format: float
-          minimum: 0
-          example: 10.0
-        payOutMaxLimit:
-          type: number
-          format: float
-          minimum: 0
-          example: 5000.0
-        support247:
-          type: boolean
-          example: true
-        automatics:
-          type: boolean
-          example: false
-        trafficSources:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        trafficTypes:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        connectionTypes:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        balanceTypes:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        legalPerson:
-          type: boolean
-          example: true
-        isActive:
-          type: boolean
-          example: true
-    
-    OfferUpdateRequest:
+
+    UserRating:
       type: object
       properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 255
-          example: "Updated Premium Exchange Offer"
-        countries:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2, 3]
-        currencies:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        paymentSystemTypes:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        trafficVolumeMin:
+        id:
           type: integer
-          minimum: 0
-          example: 0
-        trafficVolumeMax:
-          type: integer
-          minimum: 0
-          example: 10000
-        
-        payInFee:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 100
-          example: 2.0
-        payOutFee:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 100
-          example: 3.0
-        settleSpeedId:
-          type: integer
-          minimum: 1
           example: 1
-        payInMinLimit:
-          type: number
-          format: float
-          minimum: 0
-          example: 10.0
-        payInMaxLimit:
-          type: number
-          format: float
-          minimum: 0
-          example: 5000.0
-        payOutMinLimit:
-          type: number
-          format: float
-          minimum: 0
-          example: 10.0
-        payOutMaxLimit:
-          type: number
-          format: float
-          minimum: 0
-          example: 5000.0
-        support247:
-          type: boolean
-          example: true
-        automatics:
-          type: boolean
-          example: false
-        trafficSources:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        trafficTypes:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        connectionTypes:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        legalPerson:
-          type: boolean
-          example: true
-        slug:
+        raterId:
+          type: integer
+          example: 2
+        ratedUserId:
+          type: integer
+          example: 10
+        score:
+          type: integer
+          example: 5
+        comment:
           type: string
-          minLength: 1
-          example: "updated-premium-exchange-offer"
-        balanceTypes:
+          example: "Очень хороший пользователь"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-21T12:34:56.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-11-21T12:35:56.000Z"
+
+    UserRatingCreateRequest:
+      type: object
+      required:
+        - score
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 5
+          example: 4
+        comment:
+          type: string
+          maxLength: 1000
+          example: "Вежливый и пунктуальный"
+
+    UserRatingUpdateRequest:
+      type: object
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 5
+          example: 3
+        comment:
+          type: string
+          maxLength: 1000
+          example: "Обновлённый комментарий"
+
+    UserRatingsList:
+      type: object
+      properties:
+        data:
           type: array
           items:
-            type: integer
-          minItems: 1
-          example: [1]
-        isActive:
-          type: boolean
-          example: true
-    
+            $ref: '#/components/schemas/UserRating'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            pageSize:
+              type: integer
+            total:
+              type: integer
+
+    AverageRatingResponse:
+      type: object
+      properties:
+        average:
+          type: number
+          format: float
+          example: 4.2
+        count:
+          type: integer
+          example: 12
+
     PaymentMethod:
       type: object
       properties:
@@ -611,269 +491,24 @@ components:
           example: 1
         name:
           type: string
-          example: "C2C"
-    
+          example: "Bank Transfer"
+        code:
+          type: string
+          example: "bank"
+
     Language:
       type: object
       properties:
         id:
           type: integer
           example: 1
-        name:
-          type: string
-          example: "Russian"
-        shortName:
-          type: string
-          example: "RUS"
         code:
           type: string
-          example: "ru"
-        flagUrl:
-          type: string
-          example: "flags/ru.png"
-    
-    PaymentServiceCreateRequest:
-      type: object
-      required:
-        - name
-        - logo
-        - description
-        - establishedAt
-        - contacts
-        - email
-        - payInMethods
-        - payOutMethods
-        - countries
-        - currencies
-        - paymentSystemType
-        - languageSupport
-        - paymentPageExampleLink
-        - cabinetExampleLink
-      properties:
+          example: "en"
         name:
           type: string
-          minLength: 1
-          maxLength: 255
-          example: "QIWI Wallet"
-        logo:
-          type: object
-          properties:
-            file:
-              type: string
-              description: "Base64 encoded file data"
-              example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-            fileName:
-              type: string
-              example: "logo.png"
-        description:
-          type: string
-          maxLength: 255
-          example: "Popular Russian payment system for online transactions"
-        establishedAt:
-          type: string
-          pattern: '^\d{2}\.\d{2}\.\d{4}$'
-          example: "02.03.2003"
-        contacts:
-          type: array
-          items:
-            type: string
-          minItems: 1
-          example: ["+7-800-707-77-59", "support@qiwi.com"]
-        email:
-          type: string
-          format: email
-          example: "support@qiwi.com"
-        payInMethods:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        payOutMethods:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1]
-        countries:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        currencies:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 5]
-        paymentSystemType:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 5]
-        languageSupport:
-          type: array
-          items:
-            type: integer
-          minItems: 1
-          example: [1, 2]
-        paymentPageExampleLink:
-          type: string
-          format: uri
-          example: "https://qiwi.com/payment-example"
-        paymentPageExampleImageUrls:
-          type: array
-          items:
-            type: object
-            properties:
-              file:
-                type: string
-                description: "Base64 encoded file data"
-              fileName:
-                type: string
-          example: []
-        cabinetExampleLink:
-          type: string
-          format: uri
-          example: "https://qiwi.com/cabinet-example"
-        cabinetExampleImageUrls:
-          type: array
-          items:
-            type: object
-            properties:
-              file:
-                type: string
-                description: "Base64 encoded file data"
-              fileName:
-                type: string
-          example: []
-        isActive:
-          type: boolean
-          default: true
-          example: true
-    
-    PaymentServiceUpdateRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 255
-          example: "Updated QIWI Wallet"
-        logo:
-          oneOf:
-            - type: object
-              properties:
-                file:
-                  type: string
-                  description: "Base64 encoded file data"
-                fileName:
-                  type: string
-            - type: string
-              format: uri
-              description: "Existing logo URL"
-        description:
-          type: string
-          maxLength: 255
-          example: "Updated description"
-        establishedAt:
-          type: string
-          pattern: '^\d{2}\.\d{2}\.\d{4}$'
-          example: "02.03.2003"
-        contacts:
-          type: array
-          items:
-            type: string
-          example: ["+7-800-707-77-59", "support@qiwi.com"]
-        email:
-          type: string
-          format: email
-          example: "support@qiwi.com"
-        payInMethods:
-          type: array
-          items:
-            type: integer
-          example: [1, 2]
-        payOutMethods:
-          type: array
-          items:
-            type: integer
-          example: [1]
-        countries:
-          type: array
-          items:
-            type: integer
-          example: [1, 2]
-        currencies:
-          type: array
-          items:
-            type: integer
-          example: [1, 5]
-        paymentSystemType:
-          type: array
-          items:
-            type: integer
-          example: [1, 5]
-        languageSupport:
-          type: array
-          items:
-            type: integer
-          example: [1, 2]
-        paymentPageExampleLink:
-          type: string
-          format: uri
-          example: "https://qiwi.com/payment-example"
-        paymentPageExampleImageUrls:
-          type: array
-          items:
-            oneOf:
-              - type: object
-                properties:
-                  file:
-                    type: string
-                    description: "Base64 encoded file data"
-                  fileName:
-                    type: string
-              - type: string
-                format: uri
-                description: "Existing image URL"
-        cabinetExampleLink:
-          type: string
-          format: uri
-          example: "https://qiwi.com/cabinet-example"
-        cabinetExampleImageUrls:
-          type: array
-          items:
-            oneOf:
-              - type: object
-                properties:
-                  file:
-                    type: string
-                    description: "Base64 encoded file data"
-                  fileName:
-                    type: string
-              - type: string
-                format: uri
-                description: "Existing image URL"
-        slug:
-          type: string
-          example: "updated-qiwi-wallet"
-        isActive:
-          type: boolean
-          example: true
-    
-    Error:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: false
-        message:
-          type: string
-          example: Error message
-    
+          example: "English"
+
     Success:
       type: object
       properties:
@@ -882,37 +517,18 @@ components:
           example: true
         message:
           type: string
-          example: Success message
-        data:
-          type: object
-    
-    Setting:
+          example: "Operation completed"
+
+    Error:
       type: object
       properties:
-        id:
-          type: integer
-          example: 1
-        name:
+        success:
+          type: boolean
+          example: false
+        message:
           type: string
-          example: "site_title"
-        value:
-          type: string
-          example: "Platezhki Platform"
-        type:
-          type: string
-          example: "string"
-        updatedBy:
-          type: integer
-          example: 1
-        createdAt:
-          type: string
-          format: date-time
-          example: "2024-01-01T00:00:00.000Z"
-        updatedAt:
-          type: string
-          format: date-time
-          example: "2024-01-01T00:00:00.000Z"
-    
+          example: "An error occurred"
+
     CreateUserRequest:
       type: object
       required:
@@ -922,7 +538,6 @@ components:
       properties:
         username:
           type: string
-          minLength: 3
           example: "john_doe"
         email:
           type: string
@@ -930,56 +545,202 @@ components:
           example: "john@example.com"
         password:
           type: string
-          minLength: 6
-          example: "password123"
+          format: password
+          example: "securePass123"
         roleId:
           type: integer
-          minimum: 1
-          default: 3
-          example: 2
-    
+          example: 3
+
+    PaymentServiceCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "QIWI Wallet"
+        description:
+          type: string
+        serviceUrl:
+          type: string
+          format: uri
+        establishedAt:
+          type: string
+          example: "01.01.2007"
+        email:
+          type: string
+          format: email
+        contacts:
+          type: array
+          items:
+            type: string
+        countries:
+          type: array
+          items:
+            type: integer
+        currencies:
+          type: array
+          items:
+            type: integer
+        paymentSystemType:
+          type: array
+          items:
+            type: integer
+        payInMethods:
+          type: array
+          items:
+            type: integer
+        payOutMethods:
+          type: array
+          items:
+            type: integer
+        languageSupport:
+          type: array
+          items:
+            type: integer
+
+    PaymentServiceUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        serviceUrl:
+          type: string
+          format: uri
+        establishedAt:
+          type: string
+        email:
+          type: string
+          format: email
+        contacts:
+          type: array
+          items:
+            type: string
+        countries:
+          type: array
+          items:
+            type: integer
+        currencies:
+          type: array
+          items:
+            type: integer
+        paymentSystemType:
+          type: array
+          items:
+            type: integer
+        payInMethods:
+          type: array
+          items:
+            type: integer
+        payOutMethods:
+          type: array
+          items:
+            type: integer
+        languageSupport:
+          type: array
+          items:
+            type: integer
+
+    OfferUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        trafficVolumeMin:
+          type: integer
+        trafficVolumeMax:
+          type: integer
+        payInFee:
+          type: number
+        payOutFee:
+          type: number
+        payInMinLimit:
+          type: number
+        payInMaxLimit:
+          type: number
+        payOutMinLimit:
+          type: number
+        payOutMaxLimit:
+          type: number
+        support247:
+          type: boolean
+        automatics:
+          type: boolean
+        legalPerson:
+          type: boolean
+        isActive:
+          type: boolean
+        countries:
+          type: array
+          items:
+            type: integer
+        currencies:
+          type: array
+          items:
+            type: integer
+
+    Setting:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        value:
+          type: string
+
     CreateSettingRequest:
       type: object
       required:
         - name
         - value
-        - type
-        - updatedBy
       properties:
         name:
           type: string
-          minLength: 1
-          example: "site_title"
         value:
           type: string
-          minLength: 1
-          example: "Platezhki Platform"
-        type:
-          type: string
-          minLength: 1
-          example: "string"
-        updatedBy:
-          type: integer
-          minimum: 1
-          example: 1
-    
+
     UpdateSettingRequest:
       type: object
-      required:
-        - value
-        - updatedBy
       properties:
+        name:
+          type: string
         value:
           type: string
-          minLength: 1
-          example: "Updated Platezhki Platform"
-        type:
-          type: string
-          example: "string"
-        updatedBy:
+
+  parameters:
+    PayInMethodsQuery:
+      name: payInMethods
+      in: query
+      description: Filter by payment method IDs that are used as payIn methods. Can be passed as repeated params (?payInMethods=1&payInMethods=2) or as CSV (?payInMethods=1,2,3).
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
           type: integer
-          minimum: 1
-          example: 1
+        example: [1,2,3]
+    PayOutMethodsQuery:
+      name: payOutMethods
+      in: query
+      description: Filter by payment method IDs that are used as payOut methods. Can be passed as repeated params (?payOutMethods=4&payOutMethods=5) or as CSV (?payOutMethods=4,5).
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: integer
+    PayMethodsQuery:
+      name: payMethods
+      in: query
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: integer
 
 paths:
   /auth/login:
@@ -1003,7 +764,7 @@ paths:
                   type: string
                   example: password123
       responses:
-        200:
+        '200':
           description: Login successful
           content:
             application/json:
@@ -1023,28 +784,35 @@ paths:
                           refreshToken:
                             type: string
                             example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-              example:
-                success: true
-                message: "Login successful"
-                data:
-                  user:
-                    id: 1
-                    username: "john_doe"
-                    email: "john@example.com"
-                    roleId: 1
-                    isActive: true
-                    role:
-                      id: 1
-                      name: "USER"
-                  accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        401:
+        '401':
           description: Invalid credentials
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
+  /auth/register:
+    post:
+      summary: User registration
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /auth/refresh:
     post:
       summary: Refresh access token
@@ -1064,7 +832,7 @@ paths:
                   type: string
                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
       responses:
-        200:
+        '200':
           description: Token refreshed successfully
           content:
             application/json:
@@ -1075,19 +843,12 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/AuthTokens'
-              example:
-                success: true
-                message: "Token refreshed successfully"
-                data:
-                  accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        401:
+        '401':
           description: Invalid or expired refresh token
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /auth/logout:
     post:
       summary: User logout
@@ -1107,23 +868,19 @@ paths:
                   type: string
                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
       responses:
-        200:
+        '200':
           description: Logout successful
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Success'
-              example:
-                success: true
-                message: "Logout successful"
-
   /dictionaries:
     get:
       summary: Get all dictionaries
       tags: [Dictionaries]
       description: Returns all dictionary data as {id, name} objects for various entities
       responses:
-        200:
+        '200':
           description: Dictionaries retrieved successfully
           content:
             application/json:
@@ -1225,13 +982,12 @@ paths:
                                   type: integer
                                 name:
                                   type: string
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /users/me:
     get:
       summary: Get current user
@@ -1240,7 +996,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        200:
+        '200':
           description: Current user retrieved successfully
           content:
             application/json:
@@ -1251,25 +1007,54 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/User'
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        '404':
           description: User not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
+  /users/active/count:
+    get:
+      summary: Get active users count
+      tags: [Users]
+      description: >-
+        Returns the number of unique active devices/users seen within the last 5 minutes.
+        On first request from a device an httpOnly cookie named `pa_device` with a unique
+        device hash will be set. Subsequent requests update the device last-seen timestamp.
+      responses:
+        '200':
+          description: Active users count retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          activeCount:
+                            type: integer
+                            example: 12
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /users:
     get:
       summary: Get all users
@@ -1278,7 +1063,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        200:
+        '200':
           description: Users retrieved successfully
           content:
             application/json:
@@ -1291,19 +1076,18 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/User'
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
     patch:
       summary: Update current user
       tags: [Users]
@@ -1328,7 +1112,7 @@ paths:
                   type: integer
                   example: 2
       responses:
-        200:
+        '200':
           description: User updated successfully
           content:
             application/json:
@@ -1339,31 +1123,30 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/User'
-        400:
+        '400':
           description: Bad request (username/email already exists)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        '404':
           description: User not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
     put:
       summary: Create new user
       tags: [Users]
@@ -1392,7 +1175,7 @@ paths:
                   password: "securepassword"
                   roleId: 1
       responses:
-        201:
+        '201':
           description: User created successfully
           content:
             application/json:
@@ -1403,31 +1186,30 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/User'
-        400:
+        '400':
           description: Bad request (username/email already exists or validation error)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
+        '403':
           description: Access denied (insufficient permissions)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /users/{id}:
     get:
       summary: Get user by ID
@@ -1444,7 +1226,7 @@ paths:
           description: User ID
           example: 1
       responses:
-        200:
+        '200':
           description: User retrieved successfully
           content:
             application/json:
@@ -1455,25 +1237,24 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/User'
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        '404':
           description: User not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /roles:
     get:
       summary: Get all roles
@@ -1482,7 +1263,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        200:
+        '200':
           description: Roles retrieved successfully
           content:
             application/json:
@@ -1495,13 +1276,12 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Role'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
     put:
       summary: Create new role
       tags: [Roles]
@@ -1521,7 +1301,7 @@ paths:
                   type: string
                   example: "Moderator"
       responses:
-        201:
+        '201':
           description: Role created successfully
           content:
             application/json:
@@ -1532,19 +1312,18 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/Role'
-        400:
+        '400':
           description: Bad request (role name already exists)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /roles/{id}:
     patch:
       summary: Update role
@@ -1572,7 +1351,7 @@ paths:
                   type: string
                   example: "Updated Role Name"
       responses:
-        200:
+        '200':
           description: Role updated successfully
           content:
             application/json:
@@ -1583,188 +1362,87 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/Role'
-        400:
+        '400':
           description: Bad request (role name already exists)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        '404':
           description: Role not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /payment-services:
-    put:
-      summary: Create or update payment service
-      tags: [Payment Services]
-      description: Creates a new payment service or updates existing one by slug with file upload support
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PaymentServiceCreateRequest'
-            examples:
-              qiwi_wallet:
-                summary: QIWI Wallet Example
-                value:
-                  name: "QIWI Wallet"
-                  logo:
-                    file: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-                    fileName: "qiwi-logo.png"
-                  description: "Popular Russian payment system for online transactions"
-                  establishedAt: "02.03.2003"
-                  contacts: ["+7-800-707-77-59", "support@qiwi.com"]
-                  email: "support@qiwi.com"
-                  payInMethods: [1, 2]
-                  payOutMethods: [1]
-                  countries: [1, 2]
-                  currencies: [1, 5]
-                  paymentSystemType: [1, 5]
-                  languageSupport: [1, 2]
-                  paymentPageExampleLink: "https://qiwi.com/payment-example"
-                  paymentPageExampleImageUrls: []
-                  cabinetExampleLink: "https://qiwi.com/cabinet-example"
-                  cabinetExampleImageUrls: []
-                  isActive: true
-
-      responses:
-        200:
-          description: Payment service updated successfully
-        201:
-          description: Payment service created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Payment service created successfully"
-                  data:
-                    $ref: '#/components/schemas/PaymentService'
-        400:
-          description: Bad request (payment service already exists)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        500:
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
     get:
       summary: Get all payment services
       tags: [Payment Services]
-      description: Returns paginated list of payment services with filtering and search capabilities. Supports filtering by countries, currencies, payment methods, and text search.
+      description: Returns paginated list of payment services with filtering and search capabilities.
       security:
         - bearerAuth: []
       parameters:
-          - in: query
-            name: page
-            schema:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of items per page
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+            default: true
+          description: Filter by active status
+        - in: query
+          name: countryId
+          schema:
+            type: array
+            items:
               type: integer
-              minimum: 1
-              default: 1
-            description: Page number for pagination
-            required: false
-          - in: query
-            name: limit
-            schema:
+          style: form
+          explode: false
+          description: Filter by country IDs
+        - in: query
+          name: currencyId
+          schema:
+            type: array
+            items:
               type: integer
-              minimum: 1
-              maximum: 100
-              default: 10
-            description: Number of items per page
-            required: false
-          - in: query
-            name: isActive
-            schema:
-              type: boolean
-              default: true
-            description: Filter by active status
-            required: false
-          - in: query
-            name: countryId
-            schema:
-              type: array
-              items:
-                type: integer
-            style: form
-            explode: false
-            description: Filter by country IDs
-            required: false
-            example: [1, 2, 3]
-          - in: query
-            name: currencyId
-            schema:
-              type: array
-              items:
-                type: integer
-            style: form
-            explode: false
-            description: Filter by currency IDs
-            required: false
-            example: [1, 5]
-          - in: query
-            name: paymentMethodId
-            schema:
-              type: array
-              items:
-                type: integer
-            style: form
-            explode: false
-            description: Filter by payment method IDs (both pay-in and pay-out methods)
-            required: false
-            example: [1, 2]
-          - in: query
-            name: q
-            schema:
-              type: string
-            description: Search query for payment service name
-            required: false
-            example: "QIWI"
-      examples:
-        basic_list:
-          summary: Basic List
-          description: Get first page of active payment services
-          value:
-            page: 1
-            limit: 10
-            isActive: true
-        filtered_list:
-          summary: Filtered List
-          description: Get payment services for specific countries and currencies
-          value:
-            page: 1
-            limit: 20
-            countryId: [1, 2]
-            currencyId: [1, 5]
-            isActive: true
-        search_list:
-          summary: Search Results
-          description: Search for payment services by name
-          value:
-            q: "QIWI"
-            isActive: true
+          style: form
+          explode: false
+          description: Filter by currency IDs
+        - in: query
+          name: paymentMethodId
+          schema:
+            type: array
+            items:
+              type: integer
+          style: form
+          explode: false
+          description: Filter by payment method IDs
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Search query for payment service name
       responses:
-        200:
+        '200':
           description: Payment services retrieved successfully
           content:
             application/json:
@@ -1773,80 +1451,129 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: true
                   message:
                     type: string
-                    example: "Payment services retrieved successfully"
                   data:
                     type: array
                     items:
-                      allOf:
-                        - $ref: '#/components/schemas/PaymentService'
-                        - type: object
-                          properties:
-                            countries:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/Country'
-                            currencies:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/Currency'
-                            paymentSystemTypes:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/PaymentSystemType'
-                            payInMethods:
-                              type: array
-                              items:
-                                allOf:
-                                  - $ref: '#/components/schemas/PaymentMethod'
-                                  - type: object
-                                    properties:
-                                      methodType:
-                                        type: string
-                                        enum: [payIn]
-                            payOutMethods:
-                              type: array
-                              items:
-                                allOf:
-                                  - $ref: '#/components/schemas/PaymentMethod'
-                                  - type: object
-                                    properties:
-                                      methodType:
-                                        type: string
-                                        enum: [payOut]
-                            supportServiceLanguages:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/Language'
+                      $ref: '#/components/schemas/PaymentService'
                   pagination:
                     type: object
                     properties:
                       page:
                         type: integer
-                        example: 1
                       limit:
                         type: integer
-                        example: 10
                       total:
                         type: integer
-                        example: 100
                       pages:
                         type: integer
-                        example: 10
                   filters:
                     type: array
                     items:
                       type: string
-                    example: ["isActive", "countryId"]
-          500:
-            description: Server error
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Create or update payment service
+      tags: [Payment Services]
+      description: Creates a new payment service or updates existing one.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentServiceCreateRequest'
+      responses:
+        '200':
+          description: Payment service updated successfully
+        '201':
+          description: Payment service created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentService'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /payment-services/my:
+    get:
+      summary: Get current user's payment service
+      tags: [Payment Services]
+      description: Returns the payment service owned by the current authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment service retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentService'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /payment-services/slug/{slug}:
+    get:
+      summary: Get payment service by slug
+      tags: [Payment Services]
+      description: Returns a payment service by its slug.
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+          description: Payment service slug
+      responses:
+        '200':
+          description: Payment service retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentService'
+        '404':
+          description: Payment service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /payment-services/{id}:
     get:
       summary: Get payment service by id
@@ -1862,74 +1589,24 @@ paths:
             type: integer
           description: Payment service id
       responses:
-          200:
-            description: Payment service retrieved successfully
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    success:
-                      type: boolean
-                      example: true
-                    message:
-                      type: string
-                      example: "Payment service retrieved successfully"
-                    data:
-                      allOf:
-                        - $ref: '#/components/schemas/PaymentService'
-                        - type: object
-                          properties:
-                            countries:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/Country'
-                            currencies:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/Currency'
-                            paymentSystemTypes:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/PaymentSystemType'
-                            payInMethods:
-                              type: array
-                              items:
-                                allOf:
-                                  - $ref: '#/components/schemas/PaymentMethod'
-                                  - type: object
-                                    properties:
-                                      methodType:
-                                        type: string
-                                        enum: [payIn]
-                            payOutMethods:
-                              type: array
-                              items:
-                                allOf:
-                                  - $ref: '#/components/schemas/PaymentMethod'
-                                  - type: object
-                                    properties:
-                                      methodType:
-                                        type: string
-                                        enum: [payOut]
-                            supportServiceLanguages:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/Language'
-          404:
-            description: Payment service not found
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-
-          500:
-            description: Server error
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-    
+        '200':
+          description: Payment service retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentService'
+        '404':
+          description: Payment service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     patch:
       summary: Update payment service
       tags: [Payment Services]
@@ -1949,87 +1626,35 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PaymentServiceUpdateRequest'
-            examples:
-              update_basic:
-                summary: Update Basic Fields
-                value:
-                  name: "Updated QIWI Wallet"
-                  description: "Updated description for QIWI Wallet"
-                  email: "new-support@qiwi.com"
-              update_with_logo:
-                summary: Update with New Logo
-                value:
-                  logo:
-                    file: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-                    fileName: "new-logo.png"
-              update_with_existing_logo:
-                summary: Update with Existing Logo URL
-                value:
-                  logo: "https://example.com/existing-logo.png"
-              update_relations:
-                summary: Update Relations
-                value:
-                  countries: [1, 2, 3]
-                  currencies: [1, 5]
-                  paymentSystemType: [1, 2]
-                  payInMethods: [1, 2, 3]
-                  payOutMethods: [1, 2]
-                  languageSupport: [1, 2, 3]
-              update_slug:
-                summary: Update with Custom Slug
-                value:
-                  name: "New Service Name"
-                  slug: "custom-service-slug"
       responses:
-        200:
+        '200':
           description: Payment service updated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Payment service updated successfully"
-                  data:
-                    $ref: '#/components/schemas/PaymentService'
-        400:
-          description: Bad request (validation error or conflict)
+                $ref: '#/components/schemas/PaymentService'
+        '400':
+          description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              examples:
-                validation_error:
-                  summary: Validation Error
-                  value:
-                    success: false
-                    message: "Name is required"
-                conflict_error:
-                  summary: Conflict Error
-                  value:
-                    success: false
-                    message: "Payment service with this name already exists"
-        404:
+        '404':
           description: Payment service not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
     delete:
       summary: Delete payment service
       tags: [Payment Services]
-      description: Deletes an existing payment service by id. This operation is irreversible.
+      description: Deletes an existing payment service by id.
       security:
         - bearerAuth: []
       parameters:
@@ -2040,37 +1665,29 @@ paths:
             type: integer
           description: Payment service id
       responses:
-        200:
+        '200':
           description: Payment service deleted successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Payment service deleted successfully"
-        404:
+                $ref: '#/components/schemas/Success'
+        '404':
           description: Payment service not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /payment-services/{id}/activate:
     post:
       summary: Activate payment service
       tags: [Payment Services]
-      description: Activates an existing payment service by setting isActive to true
+      description: Activates an existing payment service.
       security:
         - bearerAuth: []
       parameters:
@@ -2081,48 +1698,35 @@ paths:
             type: integer
           description: Payment service id
       responses:
-        200:
+        '200':
           description: Payment service activated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Payment service activated successfully"
-                  data:
-                    $ref: '#/components/schemas/PaymentService'
-        400:
-          description: Bad request (payment service already active)
+                $ref: '#/components/schemas/PaymentService'
+        '400':
+          description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                success: false
-                message: "Payment service is already active"
-        404:
+        '404':
           description: Payment service not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /payment-services/{id}/deactivate:
     post:
       summary: Deactivate payment service
       tags: [Payment Services]
-      description: Deactivates an existing payment service by setting isActive to false
+      description: Deactivates an existing payment service.
       security:
         - bearerAuth: []
       parameters:
@@ -2133,170 +1737,30 @@ paths:
             type: integer
           description: Payment service id
       responses:
-        200:
+        '200':
           description: Payment service deactivated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Payment service deactivated successfully"
-                  data:
-                    $ref: '#/components/schemas/PaymentService'
-        400:
-          description: Bad request (payment service already inactive)
+                $ref: '#/components/schemas/PaymentService'
+        '400':
+          description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                success: false
-                message: "Payment service is already inactive"
-        404:
+        '404':
           description: Payment service not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-  /payment-services/slug/{slug}:
-    get:
-      summary: Get payment service by slug
-      tags: [Payment Services]
-      description: Returns a payment service by its slug. This is useful for public access to payment services using their URL-friendly identifier.
-      parameters:
-        - in: path
-          name: slug
-          required: true
-          schema:
-            type: string
-          description: Payment service slug
-          example: "qiwi-wallet"
-      responses:
-        200:
-          description: Payment service retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Payment service retrieved successfully"
-                  data:
-                    allOf:
-                      - $ref: '#/components/schemas/PaymentService'
-                      - type: object
-                        properties:
-                          countries:
-                            type: array
-                            items:
-                              $ref: '#/components/schemas/Country'
-                          currencies:
-                            type: array
-                            items:
-                              $ref: '#/components/schemas/Currency'
-                          paymentSystemTypes:
-                            type: array
-                            items:
-                              $ref: '#/components/schemas/PaymentSystemType'
-                          payInMethods:
-                            type: array
-                            items:
-                              allOf:
-                                - $ref: '#/components/schemas/PaymentMethod'
-                                - type: object
-                                  properties:
-                                    methodType:
-                                      type: string
-                                      enum: [payIn]
-                          payOutMethods:
-                            type: array
-                            items:
-                              allOf:
-                                - $ref: '#/components/schemas/PaymentMethod'
-                                - type: object
-                                  properties:
-                                    methodType:
-                                      type: string
-                                      enum: [payOut]
-                          supportServiceLanguages:
-                            type: array
-                            items:
-                              $ref: '#/components/schemas/Language'
-                          offers:
-                            type: array
-                            items:
-                              $ref: '#/components/schemas/Offer'
-        404:
-          description: Payment service not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        500:
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /payment-services/my:
-    get:
-      summary: Get current user's payment service
-      tags: [Payment Services]
-      description: Returns the payment service owned by the current authenticated user. Since one user can have only one payment service, this returns a single service or null.
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Payment service retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Payment service retrieved successfully"
-                  data:
-                    $ref: '#/components/schemas/PaymentService'
-        401:
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        404:
-          description: Payment service not found (user has no payment service)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        500:
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
   /offers:
     get:
       summary: Get offers
@@ -2308,89 +1772,76 @@ paths:
           schema:
             type: integer
             default: 1
-          description: Page number
         - in: query
           name: limit
           schema:
             type: integer
             default: 10
-          description: Number of items per page
         - in: query
           name: isActive
           schema:
             type: boolean
             default: true
-          description: Filter by active status
         - in: query
           name: countryId
           schema:
             type: array
             items:
               type: integer
-          description: Filter by country IDs
         - in: query
           name: currencyId
           schema:
             type: array
             items:
               type: integer
-          description: Filter by currency IDs
         - in: query
           name: paymentMethodId
           schema:
             type: array
             items:
               type: integer
-          description: Filter by payment method IDs
         - in: query
           name: paymentSystemTypeId
           schema:
             type: array
             items:
               type: integer
-          description: Filter by payment system type IDs
         - in: query
           name: trafficSourceId
           schema:
             type: array
             items:
               type: integer
-          description: Filter by traffic source IDs
         - in: query
           name: trafficTypeId
           schema:
             type: array
             items:
               type: integer
-          description: Filter by traffic type IDs
         - in: query
           name: connectionTypeId
           schema:
             type: array
             items:
               type: integer
-          description: Filter by connection type IDs
         - in: query
           name: q
           schema:
             type: string
-          description: Search by offer name
         - in: query
           name: sort_column
           schema:
             type: string
             enum: [name, id, createdAt]
             default: name
-          description: Column to sort by
         - in: query
           name: order
           schema:
             type: string
             enum: [asc, desc]
             default: asc
-          description: Sort order
       responses:
-        200:
+        '200':
           description: Offers retrieved successfully
           content:
             application/json:
@@ -2399,10 +1850,8 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: true
                   message:
                     type: string
-                    example: "Offers retrieved successfully"
                   data:
                     type: array
                     items:
@@ -2412,28 +1861,22 @@ paths:
                     properties:
                       page:
                         type: integer
-                        example: 1
                       limit:
                         type: integer
-                        example: 10
                       total:
                         type: integer
-                        example: 25
                       pages:
                         type: integer
-                        example: 3
                   filters:
                     type: array
                     items:
                       type: string
-                    example: ["isActive", "countryId"]
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
     put:
       summary: Create offer
       tags: [Offers]
@@ -2446,67 +1889,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/OfferCreateRequest'
-            examples:
-              basic_offer:
-                summary: Basic offer
-                value:
-                  name: "Premium Exchange Offer"
-                  countries: [1, 2, 3]
-                  currencies: [1, 2]
-                  paymentSystemTypes: [1, 2]
-                  trafficVolumeMin: 0
-                  trafficVolumeMax: 10000
-                  paymentMethodId: [1]
-                  payInFee: 2.0
-                  payOutFee: 3.0
-                  settleSpeedId: 1
-                  payInMinLimit: 10.0
-                  payInMaxLimit: 5000.0
-                  payOutMinLimit: 10.0
-                  payOutMaxLimit: 5000.0
-                  support247: true
-                  automatics: false
-                  trafficSources: [1, 2]
-                  trafficTypes: [1, 2]
-                  connectionTypes: [1, 2]
-                  balanceTypes: [1, 2]
-                  legalPerson: true
-                  isActive: true
       responses:
-        201:
+        '201':
           description: Offer created successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Offer created successfully"
-                  data:
-                    $ref: '#/components/schemas/Offer'
-        400:
+                $ref: '#/components/schemas/Offer'
+        '400':
           description: Validation error or offer already exists
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /offers/filter:
     get:
       summary: Filter offers and get payment services
@@ -2519,7 +1926,6 @@ paths:
             type: integer
             minimum: 1
             default: 1
-          description: Page number for pagination
         - in: query
           name: limit
           schema:
@@ -2527,63 +1933,49 @@ paths:
             minimum: 1
             maximum: 100
             default: 10
-          description: Number of items per page
         - in: query
           name: countries
           schema:
             type: array
             items:
               type: integer
-          description: Filter by country IDs
-          example: [1, 2, 3]
         - in: query
           name: currencies
           schema:
             type: array
             items:
               type: integer
-          description: Filter by currency IDs
-          example: [1, 2]
         - in: query
           name: paymentSystemTypes
           schema:
             type: array
             items:
               type: integer
-          description: Filter by payment system type IDs
-          example: [1, 2]
+        - $ref: '#/components/parameters/PayMethodsQuery'
         - in: query
           name: trafficSources
           schema:
             type: array
             items:
               type: integer
-          description: Filter by traffic source IDs
-          example: [1, 2]
         - in: query
           name: trafficTypes
           schema:
             type: array
             items:
               type: integer
-          description: Filter by traffic type IDs
-          example: [1, 2]
         - in: query
           name: connectionTypes
           schema:
             type: array
             items:
               type: integer
-          description: Filter by connection type IDs
-          example: [1, 2]
         - in: query
           name: balanceTypes
           schema:
             type: array
             items:
               type: integer
-          description: Filter by balance type IDs
-          example: [1, 2]
         - in: query
           name: support247
           schema:
@@ -2591,8 +1983,6 @@ paths:
             items:
               type: integer
               enum: [1, 2]
-          description: Filter by 24/7 support (1=yes, 2=doesn't matter)
-          example: [1]
         - in: query
           name: automatics
           schema:
@@ -2600,8 +1990,6 @@ paths:
             items:
               type: integer
               enum: [1, 2]
-          description: Filter by automatics (1=yes, 2=doesn't matter)
-          example: [1]
         - in: query
           name: legalPerson
           schema:
@@ -2609,65 +1997,42 @@ paths:
             items:
               type: integer
               enum: [1, 2]
-          description: Filter by legal person (1=yes, 2=no)
-          example: [1]
         - in: query
           name: payInFee
           schema:
             type: number
             format: float
-          description: Filter by pay-in fee
-          example: 2.0
         - in: query
           name: payOutFee
           schema:
             type: number
             format: float
-          description: Filter by pay-out fee
-          example: 3.0
         - in: query
           name: payInMinLimit
           schema:
             type: number
             format: float
-          description: Filter by minimum pay-in limit
-          example: 10.0
         - in: query
           name: payInMaxLimit
           schema:
             type: number
             format: float
-          description: Filter by maximum pay-in limit
-          example: 5000.0
         - in: query
           name: payOutMinLimit
           schema:
             type: number
             format: float
-          description: Filter by minimum pay-out limit
-          example: 10.0
         - in: query
           name: payOutMaxLimit
           schema:
             type: number
             format: float
-          description: Filter by maximum pay-out limit
-          example: 5000.0
-        - in: query
-          name: payOutLimits
-          schema:
-            type: number
-            format: float
-          description: Filter by pay-out limits (legacy field)
-          example: 1000.0
         - in: query
           name: q
           schema:
             type: string
-          description: Search offers by name (case-insensitive)
-          example: "premium"
       responses:
-        200:
+        '200':
           description: Payment services with matching offers retrieved successfully
           content:
             application/json:
@@ -2676,10 +2041,8 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: true
                   message:
                     type: string
-                    example: "Payment services retrieved successfully"
                   data:
                     type: array
                     items:
@@ -2696,35 +2059,29 @@ paths:
                     properties:
                       page:
                         type: integer
-                        example: 1
                       limit:
                         type: integer
-                        example: 10
                       total:
                         type: integer
-                        example: 5
                       pages:
                         type: integer
-                        example: 1
                   filters:
                     type: array
                     items:
                       type: string
-                    example: ["countries", "paymentSystemTypes", "legalPerson"]
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /offers/ranges:
     get:
       summary: Get offer ranges
       tags: [Offers]
-      description: Returns min and max values for all numeric offer fields (traffic volume, fees, and limits)
+      description: Returns min and max values for all numeric offer fields
       responses:
-        200:
+        '200':
           description: Offer ranges retrieved successfully
           content:
             application/json:
@@ -2733,10 +2090,8 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: true
                   message:
                     type: string
-                    example: "Offer ranges retrieved successfully"
                   data:
                     type: object
                     properties:
@@ -2746,62 +2101,51 @@ paths:
                           min:
                             type: number
                             nullable: true
-                            example: 100
                           max:
                             type: number
                             nullable: true
-                            example: 10000
                       payInFee:
                         type: object
                         properties:
                           min:
                             type: number
                             nullable: true
-                            example: 1
                           max:
                             type: number
                             nullable: true
-                            example: 5
                       payOutFee:
                         type: object
                         properties:
                           min:
                             type: number
                             nullable: true
-                            example: 2
                           max:
                             type: number
                             nullable: true
-                            example: 8
                       payInLimit:
                         type: object
                         properties:
                           min:
                             type: number
                             nullable: true
-                            example: 10
                           max:
                             type: number
                             nullable: true
-                            example: 100000
                       payOutLimit:
                         type: object
                         properties:
                           min:
                             type: number
                             nullable: true
-                            example: 20
                           max:
                             type: number
                             nullable: true
-                            example: 50000
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /offers/my:
     get:
       summary: Get current user offers
@@ -2815,44 +2159,37 @@ paths:
           schema:
             type: integer
             default: 1
-          description: Page number
         - in: query
           name: limit
           schema:
             type: integer
             default: 10
-          description: Number of items per page
         - in: query
           name: isActive
           schema:
             type: boolean
-          description: Filter by active status
         - in: query
           name: currencyId
           schema:
             type: string
-          description: Filter by currency IDs (comma-separated, e.g., "1,2,3")
         - in: query
           name: q
           schema:
             type: string
-          description: Search offers by name (case-insensitive)
         - in: query
           name: sort_column
           schema:
             type: string
             enum: [name, id, createdAt]
             default: name
-          description: Column to sort by
         - in: query
           name: order
           schema:
             type: string
             enum: [asc, desc]
             default: asc
-          description: Sort order
       responses:
-        200:
+        '200':
           description: User offers retrieved successfully
           content:
             application/json:
@@ -2861,10 +2198,8 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: true
                   message:
                     type: string
-                    example: "Offers retrieved successfully"
                   data:
                     type: array
                     items:
@@ -2874,29 +2209,24 @@ paths:
                     properties:
                       page:
                         type: integer
-                        example: 1
                       limit:
                         type: integer
-                        example: 10
                       total:
                         type: integer
-                        example: 5
                       pages:
                         type: integer
-                        example: 1
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /offers/slug/{slug}:
     get:
       summary: Get offer by slug
@@ -2908,37 +2238,25 @@ paths:
           required: true
           schema:
             type: string
-          description: Offer slug
-          example: "premium-exchange-offer"
       responses:
-        200:
+        '200':
           description: Offer retrieved successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Offer retrieved successfully"
-                  data:
-                    $ref: '#/components/schemas/Offer'
-        404:
+                $ref: '#/components/schemas/Offer'
+        '404':
           description: Offer not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /offers/{id}:
     get:
       summary: Get offer by ID
@@ -2950,37 +2268,25 @@ paths:
           required: true
           schema:
             type: integer
-          description: Offer ID
-          example: 1
       responses:
-        200:
+        '200':
           description: Offer retrieved successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Offer retrieved successfully"
-                  data:
-                    $ref: '#/components/schemas/Offer'
-        404:
+                $ref: '#/components/schemas/Offer'
+        '404':
           description: Offer not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
     patch:
       summary: Update offer
       tags: [Offers]
@@ -2993,121 +2299,49 @@ paths:
           required: true
           schema:
             type: integer
-          description: Offer ID
-          example: 1
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/OfferUpdateRequest'
-            examples:
-              update_basic:
-                summary: Update basic fields
-                value:
-                  name: "Updated Premium Exchange Offer"
-                  payInFee: 3.0
-                  payOutFee: 3.5
-                  payInMinLimit: 50.0
-                  payInMaxLimit: 10000.0
-                  payOutMinLimit: 50.0
-                  payOutMaxLimit: 10000.0
-              update_relations:
-                summary: Update relations
-                value:
-                  countries: [1, 2]
-                  currencies: [1]
-                  paymentSystemTypes: [1]
-                  trafficSources: [1]
-                  trafficTypes: [1]
-                  connectionTypes: [1]
-                  balanceTypes: [1, 2]
-              update_fees_and_limits:
-                summary: Update fees and limits
-                value:
-                  payInFee: 3.0
-                  payOutFee: 3.5
-                  payInMinLimit: 100.0
-                  payInMaxLimit: 50000.0
-                  payOutMinLimit: 100.0
-                  payOutMaxLimit: 50000.0
-              update_boolean_fields:
-                summary: Update boolean fields
-                value:
-                  support247: false
-                  automatics: true
-                  legalPerson: false
-                  isActive: false
-              update_complete:
-                summary: Update all fields and relations
-                value:
-                  name: "Complete Updated Premium Exchange Offer"
-                  countries: [1, 2, 3, 4]
-                  currencies: [1, 2, 3]
-                  paymentSystemTypes: [1, 2, 3]
-                  trafficVolumeMin: 100
-                  trafficVolumeMax: 50000
-                  payInFee: 1.5
-                  payOutFee: 2.0
-                  payInMinLimit: 25.0
-                  payInMaxLimit: 25000.0
-                  payOutMinLimit: 25.0
-                  payOutMaxLimit: 25000.0
-                  support247: true
-                  automatics: true
-                  trafficSources: [1, 2, 3]
-                  trafficTypes: [1, 2, 3]
-                  connectionTypes: [1, 2, 3]
-                  balanceTypes: [1, 2, 3]
-                  legalPerson: true
-                  isActive: true
       responses:
-        200:
+        '200':
           description: Offer updated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Offer updated successfully"
-                  data:
-                    $ref: '#/components/schemas/Offer'
-        400:
+                $ref: '#/components/schemas/Offer'
+        '400':
           description: Validation error or offer already exists
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
-          description: Access denied (not owner or admin)
+        '403':
+          description: Access denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        '404':
           description: Offer not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
     delete:
       summary: Delete offer
       tags: [Offers]
@@ -3120,47 +2354,37 @@ paths:
           required: true
           schema:
             type: integer
-          description: Offer ID
-          example: 1
       responses:
-        200:
+        '200':
           description: Offer deleted successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Offer deleted successfully"
-        401:
+                $ref: '#/components/schemas/Success'
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
-          description: Access denied (not owner or admin)
+        '403':
+          description: Access denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        '404':
           description: Offer not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /offers/{id}/activate:
     post:
       summary: Activate offer
@@ -3174,55 +2398,43 @@ paths:
           required: true
           schema:
             type: integer
-          description: Offer ID
-          example: 1
       responses:
-        200:
+        '200':
           description: Offer activated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Offer activated successfully"
-                  data:
-                    $ref: '#/components/schemas/Offer'
-        400:
+                $ref: '#/components/schemas/Offer'
+        '400':
           description: Offer already active
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
-          description: Access denied (not owner or admin)
+        '403':
+          description: Access denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        '404':
           description: Offer not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /offers/{id}/deactivate:
     post:
       summary: Deactivate offer
@@ -3236,55 +2448,43 @@ paths:
           required: true
           schema:
             type: integer
-          description: Offer ID
-          example: 1
       responses:
-        200:
+        '200':
           description: Offer deactivated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Offer deactivated successfully"
-                  data:
-                    $ref: '#/components/schemas/Offer'
-        400:
+                $ref: '#/components/schemas/Offer'
+        '400':
           description: Offer already inactive
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
-          description: Access denied (not owner or admin)
+        '403':
+          description: Access denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        '404':
           description: Offer not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /settings:
     get:
       summary: Get all settings
@@ -3297,8 +2497,6 @@ paths:
             type: integer
             minimum: 1
             default: 1
-          description: Page number for pagination
-          required: false
         - in: query
           name: limit
           schema:
@@ -3306,16 +2504,12 @@ paths:
             minimum: 1
             maximum: 100
             default: 10
-          description: Number of items per page
-          required: false
         - in: query
           name: name
           schema:
             type: string
-          description: Filter by setting name
-          required: false
       responses:
-        200:
+        '200':
           description: Settings retrieved successfully
           content:
             application/json:
@@ -3333,23 +2527,18 @@ paths:
                         properties:
                           page:
                             type: integer
-                            example: 1
                           limit:
                             type: integer
-                            example: 10
                           total:
                             type: integer
-                            example: 25
                           pages:
                             type: integer
-                            example: 3
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
     post:
       summary: Create new setting
       tags: [Settings]
@@ -3360,30 +2549,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateSettingRequest'
-            examples:
-              string_setting:
-                summary: String setting
-                value:
-                  name: "site_title"
-                  value: "Platezhki Platform"
-                  type: "string"
-                  updatedBy: 1
-              number_setting:
-                summary: Number setting
-                value:
-                  name: "max_upload_size"
-                  value: "10485760"
-                  type: "number"
-                  updatedBy: 1
-              boolean_setting:
-                summary: Boolean setting
-                value:
-                  name: "maintenance_mode"
-                  value: "false"
-                  type: "boolean"
-                  updatedBy: 1
       responses:
-        201:
+        '201':
           description: Setting created successfully
           content:
             application/json:
@@ -3394,19 +2561,18 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/Setting'
-        400:
-          description: Bad request (setting already exists or validation error)
+        '400':
+          description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /settings/{id}:
     get:
       summary: Get setting by ID
@@ -3418,10 +2584,8 @@ paths:
           required: true
           schema:
             type: integer
-          description: Setting ID
-          example: 1
       responses:
-        200:
+        '200':
           description: Setting retrieved successfully
           content:
             application/json:
@@ -3432,19 +2596,18 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/Setting'
-        404:
+        '404':
           description: Setting not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    
     put:
       summary: Update setting
       tags: [Settings]
@@ -3455,28 +2618,14 @@ paths:
           required: true
           schema:
             type: integer
-          description: Setting ID
-          example: 1
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateSettingRequest'
-            examples:
-              update_value:
-                summary: Update setting value
-                value:
-                  value: "Updated Platezhki Platform"
-                  updatedBy: 1
-              update_with_type:
-                summary: Update value and type
-                value:
-                  value: "New Value"
-                  type: "string"
-                  updatedBy: 1
       responses:
-        200:
+        '200':
           description: Setting updated successfully
           content:
             application/json:
@@ -3487,25 +2636,24 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/Setting'
-        400:
-          description: Bad request (validation error)
+        '400':
+          description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        '404':
           description: Setting not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
   /settings/name/{name}:
     get:
       summary: Get setting by name
@@ -3517,10 +2665,8 @@ paths:
           required: true
           schema:
             type: string
-          description: Setting name
-          example: "site_title"
       responses:
-        200:
+        '200':
           description: Setting retrieved successfully
           content:
             application/json:
@@ -3531,15 +2677,179 @@ paths:
                     properties:
                       data:
                         $ref: '#/components/schemas/Setting'
-        404:
+        '404':
           description: Setting not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        500:
+        '500':
           description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /users/{id}/ratings:
+    post:
+      tags:
+        - Users
+      summary: Create or update rating for a user
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Rated user ID
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRatingCreateRequest'
+      responses:
+        '201':
+          description: Rating created or updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRating'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+    get:
+      tags:
+        - Users
+      summary: Get list of ratings for a user
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Rated user ID
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 20
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of ratings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRatingsList'
+        '401':
+          description: Unauthorized
+  /users/{id}/ratings/average:
+    get:
+      tags:
+        - Users
+      summary: Get average rating for a user
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Rated user ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Average rating and total count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AverageRatingResponse'
+        '401':
+          description: Unauthorized
+  /users/{id}/ratings/{ratingId}:
+    delete:
+      tags:
+        - Users
+      summary: Delete a rating
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Rated user ID
+        - in: path
+          name: ratingId
+          schema:
+            type: integer
+          required: true
+          description: Rating ID to delete
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Rating deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Rating not found
+    patch:
+      tags:
+        - Users
+      summary: Update a rating by id
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Rated user ID
+        - in: path
+          name: ratingId
+          schema:
+            type: integer
+          required: true
+          description: Rating ID to update
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                score:
+                  type: integer
+                  minimum: 0
+                  maximum: 5
+                  example: 4
+                comment:
+                  type: string
+                  example: "Updated comment"
+      responses:
+        '200':
+          description: Rating updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRating'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Rating not found

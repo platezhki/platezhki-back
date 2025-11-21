@@ -13,7 +13,8 @@
     "token_refreshed": "Токен успішно оновлено",
     "logout_success": "Успішний вихід",
     "unauthorized": "Неавторизований доступ",
-    "insufficient_permissions": "Недостатньо прав для виконання цієї дії"
+    "insufficient_permissions": "Недостатньо прав для виконання цієї дії",
+    "role_not_exists": "Роль не існує"
   },
   "validation": {
     "validation_failed": "Помилка валідації",
@@ -164,7 +165,19 @@
     "retrieval_failed": "Не вдалося отримати ролі",
     "creation_failed": "Не вдалося створити роль",
     "update_failed": "Не вдалося оновити роль",
-    "name_exists": "Роль з такою назвою вже існує",
+    "name_exists": "Роль з таким іменем вже існує",
     "not_found": "Роль не знайдено"
+  },
+  "user_rating": {
+    "cannot_rate_self": "Ви не можете оцінювати себе",
+    "rating_saved": "Оцінка успішно збережена",
+    "ratings_retrieved": "Оцінки успішно отримані",
+    "average_retrieved": "Середня оцінка успішно отримана",
+    "rating_deleted": "Оцінка успішно видалена",
+    "rating_not_found": "Оцінка не знайдена",
+    "rating_failed": "Не вдалося зберегти оцінку",
+    "get_ratings_failed": "Не вдалося отримати оцінки",
+    "get_average_failed": "Не вдалося отримати середню оцінку",
+    "delete_failed": "Не вдалося видалити оцінку"
   }
 }

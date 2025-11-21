@@ -30,12 +30,14 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
     "@prisma/client": "^6.16.2",
     "@types/js-yaml": "^4.0.9",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "i18next": "^25.5.2",
     "js-yaml": "^4.1.0",
@@ -45,6 +47,7 @@
     "zod": "^4.1.9"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.3",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",

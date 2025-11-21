@@ -28,12 +28,12 @@ const transformOffer = (offer: any) => {
         })) || [],
         paymentServiceId: offer?.paymentServices?.[0]?.paymentService?.id || null
     };
-    
+
     // Ensure id is preserved
     if (offer.id) {
         transformed.id = offer.id;
     }
-    
+
     return transformed;
 };
 
@@ -61,9 +61,9 @@ export const createOffer = async (data: any) => {
 
         // Find the payment service created by the same user
         const userPaymentService = await prisma.paymentService.findFirst({
-            where: { 
+            where: {
                 ownerId: data.ownerId,
-                isActive: true 
+                isActive: true
             }
         });
 
@@ -195,7 +195,8 @@ export const createOffer = async (data: any) => {
                             select: {
                                 id: true,
                                 name: true,
-                                slug: true
+                                slug: true,
+                                user: { select: { id: true, averageRating: true, ratingsCount: true } }
                             }
                         }
                     }
@@ -362,7 +363,8 @@ export const getOffers = async (filters?: z.infer<typeof getOffersSchema>['query
                             select: {
                                 id: true,
                                 name: true,
-                                slug: true
+                                slug: true,
+                                user: { select: { id: true, averageRating: true, ratingsCount: true } }
                             }
                         }
                     }
@@ -441,7 +443,8 @@ export const getOfferById = async (id: number) => {
                             select: {
                                 id: true,
                                 name: true,
-                                slug: true
+                                slug: true,
+                                user: { select: { id: true, averageRating: true, ratingsCount: true } }
                             }
                         }
                     }
@@ -511,7 +514,8 @@ export const getOfferBySlug = async (slug: string) => {
                             select: {
                                 id: true,
                                 name: true,
-                                slug: true
+                                slug: true,
+                                user: { select: { id: true, averageRating: true, ratingsCount: true } }
                             }
                         }
                     }
@@ -622,7 +626,8 @@ export const updateOffer = async (id: number, data: any) => {
                             select: {
                                 id: true,
                                 name: true,
-                                slug: true
+                                slug: true,
+                                user: { select: { id: true, averageRating: true, ratingsCount: true } }
                             }
                         }
                     }
@@ -741,7 +746,7 @@ export const updateOffer = async (id: number, data: any) => {
             await prisma.offerPaymentMethod.deleteMany({
                 where: { offerId: id }
             });
-            
+
             // Create new relations
             await prisma.offerPaymentMethod.createMany({
                 data: data.paymentMethods.map((paymentMethodId: number) => ({
@@ -767,9 +772,9 @@ export const updateOffer = async (id: number, data: any) => {
         if (existingConnections.length === 0) {
             // Find the payment service created by the same user
             const userPaymentService = await prisma.paymentService.findFirst({
-                where: { 
+                where: {
                     ownerId: existingOffer.ownerId,
-                    isActive: true 
+                    isActive: true
                 }
             });
 
@@ -834,7 +839,8 @@ export const updateOffer = async (id: number, data: any) => {
                             select: {
                                 id: true,
                                 name: true,
-                                slug: true
+                                slug: true,
+                                user: { select: { id: true, averageRating: true, ratingsCount: true } }
                             }
                         }
                     }
@@ -871,9 +877,9 @@ export const activateOffer = async (id: number) => {
         if (existingConnections.length === 0) {
             // Find the payment service created by the same user
             const userPaymentService = await prisma.paymentService.findFirst({
-                where: { 
+                where: {
                     ownerId: existingOffer.ownerId,
-                    isActive: true 
+                    isActive: true
                 }
             });
 
@@ -938,7 +944,8 @@ export const activateOffer = async (id: number) => {
                             select: {
                                 id: true,
                                 name: true,
-                                slug: true
+                                slug: true,
+                                user: { select: { id: true, averageRating: true, ratingsCount: true } }
                             }
                         }
                     }
@@ -975,9 +982,9 @@ export const deactivateOffer = async (id: number) => {
         if (existingConnections.length === 0) {
             // Find the payment service created by the same user
             const userPaymentService = await prisma.paymentService.findFirst({
-                where: { 
+                where: {
                     ownerId: existingOffer.ownerId,
-                    isActive: true 
+                    isActive: true
                 }
             });
 
@@ -1042,7 +1049,8 @@ export const deactivateOffer = async (id: number) => {
                             select: {
                                 id: true,
                                 name: true,
-                                slug: true
+                                slug: true,
+                                user: { select: { id: true, averageRating: true, ratingsCount: true } }
                             }
                         }
                     }
@@ -1210,7 +1218,8 @@ export const getUserOffers = async (ownerId: number, filters?: z.infer<typeof ge
                             select: {
                                 id: true,
                                 name: true,
-                                slug: true
+                                slug: true,
+                                user: { select: { id: true, averageRating: true, ratingsCount: true } }
                             }
                         }
                     }
@@ -1247,7 +1256,7 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
     try {
         const page = Number(filters?.page) || 1;
         const limit = Number(filters?.limit) || 10;
-        
+
         // For client-side filtering, we need to fetch all items first
         // then apply pagination after filtering
 
@@ -1275,8 +1284,21 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
                 }
             };
         }
-        
+
         const offerConditions = [];
+
+        // Filter by payment method ids attached to payment services (payIn / payOut)
+        if (filters?.payMethods && filters.payMethods.length > 0) {
+            offerConditions.push({
+                paymentMethods: {
+                    some: {
+                        paymentMethodId: {
+                            in: filters.payMethods
+                        }
+                    }
+                }
+            });
+        }
 
         // Filter by payment system types
         if (filters?.paymentSystemTypes && filters.paymentSystemTypes.length > 0) {
@@ -1439,24 +1461,24 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
         // Filter by offer fields - these filter payment services that have offers with these characteristics
         if (filters?.legalPerson && filters.legalPerson.length > 0) {
             offerConditions.push({
-                legalPerson: filters.legalPerson.length === 1 ? 
-                    filters.legalPerson[0] : 
+                legalPerson: filters.legalPerson.length === 1 ?
+                    filters.legalPerson[0] :
                     { in: filters.legalPerson }
             });
         }
 
         if (filters?.support247 && filters.support247.length > 0) {
             offerConditions.push({
-                support247: filters.support247.length === 1 ? 
-                    filters.support247[0] : 
+                support247: filters.support247.length === 1 ?
+                    filters.support247[0] :
                     { in: filters.support247 }
             });
         }
 
         if (filters?.automatics && filters.automatics.length > 0) {
             offerConditions.push({
-                automatics: filters.automatics.length === 1 ? 
-                    filters.automatics[0] : 
+                automatics: filters.automatics.length === 1 ?
+                    filters.automatics[0] :
                     { in: filters.automatics }
             });
         }
@@ -1529,7 +1551,7 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
             // If we have a search query, we need to restructure the where clause
             // to support OR logic between payment service name and offer names
             const searchConditions = [];
-            
+
             // Search by payment service name
             searchConditions.push({
                 name: {
@@ -1537,7 +1559,7 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
                     mode: 'insensitive'
                 }
             });
-            
+
             // Search by offer name
             const offerNameCondition: any = {
                 paymentServiceOffers: {
@@ -1551,14 +1573,14 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
                     }
                 }
             };
-            
+
             // If there are other offer conditions, combine them with AND
             if (offerConditions.length > 0) {
                 offerNameCondition.paymentServiceOffers.some.offer.AND = offerConditions;
             }
-            
+
             searchConditions.push(offerNameCondition);
-            
+
             // Combine search with existing where conditions using AND
             const existingConditions = { ...where };
             where.AND = [
@@ -1576,49 +1598,59 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
             };
         }
 
-        // Get total count of payment services
+        // Get total count of payment services (DB-side filtered)
         const total = await prisma.paymentService.count({ where });
 
-        // Build orderBy clause for sorting
-        const orderBy: any = {};
-        const sortColumn = filters?.sortColumn || 'id';
-        const order = filters?.order || 'DESC';
-        
-        orderBy[sortColumn] = order.toLowerCase();
+        // Build orderBy clause for sorting (support sorting by owner average rating via nested relation)
+        let orderBy: any;
+        const sortColumn = (filters?.sortColumn || 'id') as any;
+        const order = (filters?.order || 'DESC').toLowerCase();
 
-        // Get payment services with relations
+        // If sorting by averageRating -> first by user.averageRating, then by user.ratingsCount as tie-breaker
+        if (String(sortColumn) === 'averageRating') {
+            // prisma supports array orderBy to apply multiple ordering levels
+            orderBy = [
+                { user: { averageRating: order } },
+                { user: { ratingsCount: order } }
+            ];
+        } else {
+            // single-level order
+            orderBy = { [sortColumn]: order };
+        }
+
+        // Get payment services with relations (DB-side pagination + sorting)
         const paymentServices = await prisma.paymentService.findMany({
             where,
             orderBy,
-            include: {
+            skip: (page - 1) * limit,
+            take: limit,
+            include: ({
                 countries: {
-                    include: {
-                        country: true
-                    }
+                    include: { country: true }
                 },
                 currencies: {
-                    include: {
-                        currency: true
-                    }
+                    include: { currency: true }
                 },
                 paymentSystemTypes: {
-                    include: {
-                        paymentSystemType: true
-                    }
+                    include: { paymentSystemType: true }
                 },
                 payInMethods: {
-                    include: {
-                        paymentMethod: true
-                    }
+                    where: { methodType: 'payIn' },
+                    include: { paymentMethod: true }
                 },
                 payOutMethods: {
-                    include: {
-                        paymentMethod: true
-                    }
+                    where: { methodType: 'payOut' },
+                    include: { paymentMethod: true }
                 },
                 supportServiceLanguages: {
-                    include: {
-                        language: true
+                    include: { language: true }
+                },
+                // include owner user data to get denormalized averageRating/ratingsCount
+                user: {
+                    select: {
+                        id: true,
+                        averageRating: true,
+                        ratingsCount: true
                     }
                 },
                 paymentServiceOffers: {
@@ -1626,87 +1658,64 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
                     include: {
                         offer: {
                             include: {
-                                countries: {
-                                    include: {
-                                        country: true
-                                    }
-                                },
-                                currencies: {
-                                    include: {
-                                        currency: true
-                                    }
-                                },
-                                paymentSystemTypes: {
-                                    include: {
-                                        paymentSystemType: true
-                                    }
-                                },
-                                paymentMethods: {
-                                    include: {
-                                        paymentMethod: true
-                                    }
-                                },
-                                trafficSources: {
-                                    include: {
-                                        trafficSource: true
-                                    }
-                                },
-                                trafficTypes: {
-                                    include: {
-                                        trafficType: true
-                                    }
-                                },
-                                connectionTypes: {
-                                    include: {
-                                        connectionType: true
-                                    }
-                                },
-                                balanceTypes: {
-                                    include: {
-                                        balanceType: true
+                                countries: { include: { country: true } },
+                                currencies: { include: { currency: true } },
+                                paymentSystemTypes: { include: { paymentSystemType: true } },
+                                paymentMethods: { include: { paymentMethod: true } },
+                                trafficSources: { include: { trafficSource: true } },
+                                trafficTypes: { include: { trafficType: true } },
+                                connectionTypes: { include: { connectionType: true } },
+                                balanceTypes: { include: { balanceType: true } },
+                                // include offer creator denormalized rating fields
+                                createdBy: {
+                                    select: {
+                                        id: true,
+                                        averageRating: true,
+                                        ratingsCount: true
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
+            } as any)
         });
 
         // Transform payment services data
         const transformedPaymentServices = paymentServices.map(service => {
+            const s = service as any; // relax typings for runtime fields included via `include as any`
+
             // Filter countries based on filter criteria
-            let filteredCountries = service.countries?.map((c: any) => c.country) || [];
+            let filteredCountries = s.countries?.map((c: any) => c.country) || [];
             if (filters?.countries && filters.countries.length > 0) {
-                filteredCountries = filteredCountries.filter((country: any) => 
+                filteredCountries = filteredCountries.filter((country: any) =>
                     filters.countries!.includes(country.id)
                 );
             }
 
             // Filter currencies based on filter criteria
-            let filteredCurrencies = service.currencies?.map((c: any) => c.currency) || [];
+            let filteredCurrencies = s.currencies?.map((c: any) => c.currency) || [];
             if (filters?.currencies && filters.currencies.length > 0) {
                 // If filtering by offer currencies, show currencies from the offers instead
-                const offerCurrencies = service.paymentServiceOffers?.flatMap(psOffer => 
-                    psOffer.offer.currencies?.map((c: any) => c.currency) || []
+                const offerCurrencies = s.paymentServiceOffers?.flatMap((psOffer: any) =>
+                    psOffer.offer?.currencies?.map((c: any) => c.currency) || []
                 ) || [];
-                
+
                 // Filter to only show currencies that match the filter
-                filteredCurrencies = offerCurrencies.filter((currency: any) => 
+                filteredCurrencies = offerCurrencies.filter((currency: any) =>
                     filters.currencies!.includes(currency.id)
                 );
-                
+
                 // Remove duplicates
-                const uniqueCurrencies = filteredCurrencies.filter((currency, index, self) => 
-                    index === self.findIndex(c => c.id === currency.id)
+                filteredCurrencies = filteredCurrencies.filter((currency: any, index: number, self: any) =>
+                    index === self.findIndex((c: any) => c.id === currency.id)
                 );
-                filteredCurrencies = uniqueCurrencies;
-            }
+             }
 
             // Filter payment system types based on filter criteria
-            let filteredPaymentSystemTypes = service.paymentSystemTypes?.map((p: any) => p.paymentSystemType) || [];
+            let filteredPaymentSystemTypes = s.paymentSystemTypes?.map((p: any) => p.paymentSystemType) || [];
             if (filters?.paymentSystemTypes && filters.paymentSystemTypes.length > 0) {
-                filteredPaymentSystemTypes = filteredPaymentSystemTypes.filter((pst: any) => 
+                filteredPaymentSystemTypes = filteredPaymentSystemTypes.filter((pst: any) =>
                     filters.paymentSystemTypes!.includes(pst.id)
                 );
             }
@@ -1716,176 +1725,30 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
                 countries: filteredCountries,
                 currencies: filteredCurrencies,
                 paymentSystemTypes: filteredPaymentSystemTypes,
-                payInMethods: service.payInMethods?.map((p: any) => ({
+                payInMethods: s.payInMethods?.map((p: any) => ({
                     ...p.paymentMethod,
                     methodType: p.methodType
                 })) || [],
-                payOutMethods: service.payOutMethods?.map((p: any) => ({
+                payOutMethods: s.payOutMethods?.map((p: any) => ({
                     ...p.paymentMethod,
                     methodType: p.methodType
                 })) || [],
                 supportServiceLanguages: service.supportServiceLanguages?.map((l: any) => l.language) || [],
-                offers: service.paymentServiceOffers?.map(psOffer => transformOffer(psOffer.offer)) || []
-            };
-            
-            // Filter offers based on filter criteria
-            if (filters?.legalPerson && filters.legalPerson.length > 0) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    filters.legalPerson!.includes(offer.legalPerson)
-                );
-            }
-            
-            if (filters?.support247 && filters.support247.length > 0) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    filters.support247!.includes(offer.support247)
-                );
-            }
-            
-            if (filters?.automatics && filters.automatics.length > 0) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    filters.automatics!.includes(offer.automatics)
-                );
-            }
-            
-            if (filters?.trafficSources && filters.trafficSources.length > 0) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.trafficSources.some((ts: any) => 
-                        filters.trafficSources!.includes(ts.id)
-                    )
-                );
-            }
-            
-            if (filters?.trafficTypes && filters.trafficTypes.length > 0) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.trafficTypes.some((tt: any) => 
-                        filters.trafficTypes!.includes(tt.id)
-                    )
-                );
-            }
-            
-            if (filters?.balanceTypes && filters.balanceTypes.length > 0) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.balanceTypes.some((bt: any) => 
-                        filters.balanceTypes!.includes(bt.id)
-                    )
-                );
-            }
-            
-            if (filters?.connectionTypes && filters.connectionTypes.length > 0) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.connectionTypes.some((ct: any) => 
-                        filters.connectionTypes!.includes(ct.id)
-                    )
-                );
-            }
-            
-            if (filters?.currencies && filters.currencies.length > 0) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.currencies.some((currency: any) => 
-                        filters.currencies!.includes(currency.id)
-                    )
-                );
-            }
-            
-            // Filter by traffic volume min
-            if (filters?.trafficVolumeMin) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.trafficVolumeMin <= Number(filters.trafficVolumeMin) &&
-                    offer.trafficVolumeMax >= Number(filters.trafficVolumeMin)
-                );
-            }
-            
-            // Filter by traffic volume max
-            if (filters?.trafficVolumeMax) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.trafficVolumeMin <= Number(filters.trafficVolumeMax) &&
-                    offer.trafficVolumeMax >= Number(filters.trafficVolumeMax)
-                );
-            }
-            
-            // Filter by pay in min fee
-            if (filters?.payInMinFee) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.payInFee >= Number(filters.payInMinFee)
-                );
-            }
-            
-            // Filter by pay in max fee
-            if (filters?.payInMaxFee) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.payInFee <= Number(filters.payInMaxFee)
-                );
-            }
-            
-            // Filter by pay out min fee
-            if (filters?.payOutMinFee) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.payOutFee >= Number(filters.payOutMinFee)
-                );
-            }
-            
-            // Filter by pay out max fee
-            if (filters?.payOutMaxFee) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.payOutFee <= Number(filters.payOutMaxFee)
-                );
-            }
-            
-            // Filter by pay in min limit
-            if (filters?.payInMinLimit) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.payInMinLimit <= Number(filters.payInMinLimit)
-                );
-            }
-            
-            // Filter by pay in max limit
-            if (filters?.payInMaxLimit) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.payInMaxLimit >= Number(filters.payInMaxLimit)
-                );
-            }
-            
-            // Filter by pay out min limit
-            if (filters?.payOutMinLimit) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.payOutMinLimit <= Number(filters.payOutMinLimit)
-                );
-            }
-            
-            // Filter by pay out max limit
-            if (filters?.payOutMaxLimit) {
-                transformedService.offers = transformedService.offers.filter((offer: any) => 
-                    offer.payOutMaxLimit >= Number(filters.payOutMaxLimit)
-                );
-            }
-            
+                offers: s.paymentServiceOffers?.map((psOffer: any) => transformOffer(psOffer.offer)) || [],
+             };
+
             // Remove the paymentServiceOffers field
             delete (transformedService as any).paymentServiceOffers;
-            
+
             return transformedService;
         });
 
-        // Filter out payment services that have no offers after filtering
-        const filteredPaymentServices = transformedPaymentServices.filter(service => 
-            service.offers && service.offers.length > 0
-        );
-
-        // Apply pagination after client-side filtering
-        const skip = (page - 1) * limit;
-        const finalResults = filteredPaymentServices.slice(skip, skip + limit);
-        
-        // Calculate total pages based on filtered results
-        const totalFiltered = filteredPaymentServices.length;
-        const pages = Math.ceil(totalFiltered / limit);
+        // At this point DB already applied pagination; use `total` for pages
+        const pages = Math.ceil(total / limit);
 
         return {
-            data: finalResults,
-            pagination: {
-                page,
-                limit,
-                total: totalFiltered,
-                pages: pages
-            },
+            data: transformedPaymentServices.filter((s: any) => s.offers && s.offers.length > 0),
+            pagination: { page, limit, total, pages },
             filters: Object.keys(filters || {}).filter(key => filters![key as keyof typeof filters] !== undefined)
         };
     } catch (error) {
@@ -1912,9 +1775,9 @@ export const connectOffersToPaymentServices = async () => {
         for (const offer of offersWithoutConnections) {
             // Find the payment service for this offer's owner
             const userPaymentService = await prisma.paymentService.findFirst({
-                where: { 
+                where: {
                     ownerId: offer.ownerId,
-                    isActive: true 
+                    isActive: true
                 }
             });
 

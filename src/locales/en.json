@@ -13,7 +13,8 @@
     "token_refreshed": "Token refreshed successfully",
     "logout_success": "Logout successful",
     "unauthorized": "Unauthorized access",
-    "insufficient_permissions": "Insufficient permissions to perform this action"
+    "insufficient_permissions": "Insufficient permissions to perform this action",
+    "role_not_exists": "Role not exists"
   },
   "validation": {
     "validation_failed": "Validation failed",
@@ -188,5 +189,17 @@
     "update_failed": "Failed to update role",
     "name_exists": "Role with this name already exists",
     "not_found": "Role not found"
+  },
+  "user_rating": {
+    "cannot_rate_self": "You cannot rate yourself",
+    "rating_saved": "Rating saved successfully",
+    "ratings_retrieved": "Ratings retrieved successfully",
+    "average_retrieved": "Average rating retrieved successfully",
+    "rating_deleted": "Rating deleted successfully",
+    "rating_not_found": "Rating not found",
+    "rating_failed": "Failed to save rating",
+    "get_ratings_failed": "Failed to retrieve ratings",
+    "get_average_failed": "Failed to retrieve average rating",
+    "delete_failed": "Failed to delete rating"
   }
 }

@@ -41,7 +41,6 @@ export const registerBodySchema = z.object({
   username: z.string().min(2),
   password: z.string().min(8),
   email: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format"),
-  roleId: z.number().optional(),
 });
 
 export const refreshTokenBodySchema = z.object({

@@ -146,17 +146,17 @@ export const getUserOffersSchema = z.object({
     isActive: z.string().optional(),
     sort_column: z.string().optional(),
     order: z.enum(['asc', 'desc']).optional(),
-    currencyId: z.string().transform((val) => 
+    currencyId: z.string().transform((val) =>
       val.split(',').map(id => parseInt(id.trim()))
     ).optional(),
     q: z.string().optional(),
   }).optional(),
 });
 
-// Helper function to handle both single values and arrays
+// Helper function to handle both single values and arrays (also supports comma-separated string like "1,2,3")
 const arrayOrSingle = z.union([
   z.array(z.string().transform(val => parseInt(val))),
-  z.string().transform(val => [parseInt(val)])
+  z.string().transform(val => val.split(',').map(s => parseInt(s.trim())))
 ]);
 
 export const filterOffersSchema = z.object({
@@ -182,11 +182,11 @@ export const filterOffersSchema = z.object({
     balanceTypes: arrayOrSingle.optional(),
     connectionTypes: arrayOrSingle.optional(),
     legalPerson: arrayOrSingle.optional(),
-    
+    payMethods: arrayOrSingle.optional(),
     // Pagination
     page: z.string().optional().default("1"),
     limit: z.string().optional().default("12"),
-    
+
     // Search
     q: z.string().optional(),
 
@@ -194,7 +194,7 @@ export const filterOffersSchema = z.object({
     ids: z.array(z.number()).optional(),
 
     // Sorting
-    sortColumn: z.enum(['id', 'createdAt', 'name']).optional().default('id'),
+    sortColumn: z.enum(['id', 'createdAt', 'name', 'averageRating', 'payInMethodsCount', 'payOutMethodsCount']).optional().default('id'),
     order: z.enum(['ASC', 'DESC']).optional().default('DESC'),
   }).optional(),
 });
