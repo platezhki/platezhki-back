@@ -9,31 +9,32 @@ datasource db {
 }
 
 model User {
-  id                   Int              @id @default(autoincrement())
+  id                   Int               @id @default(autoincrement())
   username             String
   password             String
-  email                String           @unique
-  roleId               Int              @default(3)
+  email                String            @unique
+  roleId               Int               @default(3)
   // Average rating aggregate fields (kept denormalized for fast queries)
-  averageRating        Float            @default(0)
-  ratingsCount         Int              @default(0)
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  averageRating        Float             @default(0)
+  ratingsCount         Int               @default(0)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
   ownerId              Int?
-  isActive             Boolean          @default(true)
+  isActive             Boolean           @default(true)
   authTokens           AuthToken[]
   languages            Language[]
   offers               Offer[]
-  paymentServices      PaymentService[] @relation("PaymentServiceCreatedBy")
-  ownedPaymentServices PaymentService[] @relation("PaymentServiceOwner")
+  paymentServices      PaymentService[]  @relation("PaymentServiceCreatedBy")
+  ownedPaymentServices PaymentService[]  @relation("PaymentServiceOwner")
   updatedSettings      Setting[]
   translations         Translation[]
-  createdBy            User?            @relation("CreatedBy", fields: [ownerId], references: [id])
-  createdUsers         User[]           @relation("CreatedBy")
-  role                 Role             @relation(fields: [roleId], references: [id])
+  createdBy            User?             @relation("CreatedBy", fields: [ownerId], references: [id])
+  createdUsers         User[]            @relation("CreatedBy")
+  role                 Role              @relation(fields: [roleId], references: [id])
   // Ratings relations
-  ratingsGiven         UserRating[]     @relation("UserRatingsGiven")
-  ratingsReceived      UserRating[]     @relation("UserRatingsReceived")
+  ratingsGiven         UserRating[]      @relation("UserRatingsGiven")
+  ratingsReceived      UserRating[]      @relation("UserRatingsReceived")
+  UserRatingReply      UserRatingReply[]
 
   @@map("users")
 }
@@ -417,19 +418,37 @@ model SettleSpeed {
 }
 
 model UserRating {
-  id          Int      @id @default(autoincrement())
-  raterId     Int
-  ratedUserId Int
-  score       Int      @default(0)
-  comment     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  raterId      Int
+  ratedUserId  Int
+  score        Int      @default(0)
+  comment      String?
+  repliesCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   rater     User @relation("UserRatingsGiven", fields: [raterId], references: [id], onDelete: Cascade)
   ratedUser User @relation("UserRatingsReceived", fields: [ratedUserId], references: [id], onDelete: Cascade)
 
+  replies UserRatingReply[]
+
   @@index([ratedUserId], map: "user_ratings_rated_user_idx")
   @@map("user_ratings")
+}
+
+model UserRatingReply {
+  id           Int      @id @default(autoincrement())
+  authorId     Int
+  userRatingId Int
+  comment      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  userRating UserRating @relation(fields: [userRatingId], references: [id], onDelete: Cascade)
+
+  @@index([userRatingId], map: "user_rating_replies_user_rating_idx")
+  @@map("user_rating_replies")
 }
 
 model UserActivity {

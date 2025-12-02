@@ -21,7 +21,21 @@ export const createOrUpdateRating = async (raterId: number, ratedUserId: number,
             throw new Error(__('user_rating.invalid_score') || 'Invalid score');
         }
 
-        // Always create a new rating record — allow multiple ratings from the same rater to the same user
+        // If a rating from this rater to this user already exists, update it; otherwise create new
+        const existing = await (prisma as any).userRating.findFirst({ where: { raterId, ratedUserId } });
+
+        if (existing) {
+            const updated = await (prisma as any).userRating.update({
+                where: { id: existing.id },
+                data: { score, comment }
+            });
+
+            // Update denormalized aggregates on User
+            await updateUserRatingAggregate(ratedUserId);
+
+            return { rating: updated, isCreated: false };
+        }
+
         const created = await (prisma as any).userRating.create({
             data: { raterId, ratedUserId, score, comment }
         });
@@ -29,20 +43,88 @@ export const createOrUpdateRating = async (raterId: number, ratedUserId: number,
         // Update denormalized aggregates on User
         await updateUserRatingAggregate(ratedUserId);
 
-        return created;
+        return { rating: created, isCreated: true };
     } catch (error) {
         throw error;
     }
 };
 
-export const getRatingsForUser = async (ratedUserId: number) => {
+export const getRatingsForUser = async (
+    ratedUserId: number,
+    filters?: {
+        page?: number;
+        startDate?: string | Date;
+        endDate?: string | Date;
+        score?: number;
+        minScore?: number;
+        maxScore?: number;
+        limit?: number;
+        skip?: number;
+        sort_column?: 'createdAt' | 'score';
+        order?: 'asc' | 'desc';
+    }
+) => {
+    const page = Number(filters?.page) || 1;
+    const limit = Number(filters?.limit) || 10;
+    const skip = (page - 1) * limit;
+
     try {
-        const ratings = await (prisma as any).userRating.findMany({
-            where: { ratedUserId },
-            include: { rater: { select: { id: true, username: true } } },
-            orderBy: { createdAt: 'desc' }
+        // Build where clause dynamically based on provided filters
+        const where: any = { ratedUserId };
+
+        if (filters) {
+            // Date range
+            if (filters.startDate || filters.endDate) {
+                where.createdAt = {};
+                if (filters.startDate) {
+                    const d = typeof filters.startDate === 'string' ? new Date(filters.startDate) : filters.startDate;
+                    if (!isNaN(d.getTime())) where.createdAt.gte = d;
+                }
+                if (filters.endDate) {
+                    const d = typeof filters.endDate === 'string' ? new Date(filters.endDate) : filters.endDate;
+                    if (!isNaN(d.getTime())) where.createdAt.lte = d;
+                }
+            }
+
+            // Score filters: exact or range
+            if (filters.score !== undefined) {
+                where.score = filters.score;
+            } else if (filters.minScore !== undefined || filters.maxScore !== undefined) {
+                where.score = {};
+                if (filters.minScore !== undefined) where.score.gte = filters.minScore;
+                if (filters.maxScore !== undefined) where.score.lte = filters.maxScore;
+            }
+        }
+
+        const include = { rater: { select: { id: true, username: true, role: true, ratingsCount: true } } };
+
+        const orderDir = filters?.order === 'asc' ? 'asc' : 'desc';
+
+        // choose sort column (allow repliesCount)
+        const sortColumn = filters?.sort_column === 'createdAt' ? 'createdAt' : (filters?.sort_column === 'score' ? 'score' : (filters?.sort_column === 'repliesCount' ? 'repliesCount' : 'id'));
+
+        const data = await (prisma as any).userRating.findMany({
+            where,
+            skip,
+            take: limit,
+            include,
+            orderBy: { [sortColumn]: orderDir }
         });
-        return ratings;
+
+        const dataWithReplies = data; // repliesCount is stored in DB now
+
+        const total = await prisma.userRating.count({ where });
+        const pages = Math.ceil(total / limit);
+
+        return {
+            data: dataWithReplies,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages
+            },
+        };
     } catch (error) {
         throw error;
     }

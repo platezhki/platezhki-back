@@ -10,6 +10,8 @@ async function main() {
       { name: 'ADMIN' },
       { name: 'MANAGER' },
       { name: 'USER' },
+      { name: 'PAYMENT' },
+      { name: 'MERCHANT' },
     ],
     skipDuplicates: true,
   });
@@ -99,6 +101,7 @@ async function main() {
       { name: 'Crypto address' },
       { name: 'E-Wallet' },
       { name: 'Virtual Cards' },
+      { name: 'Bank Transfer' },
     ],
     skipDuplicates: true,
   });

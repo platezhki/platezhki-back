@@ -201,5 +201,13 @@
     "get_ratings_failed": "Failed to retrieve ratings",
     "get_average_failed": "Failed to retrieve average rating",
     "delete_failed": "Failed to delete rating"
+  },
+  "user_rating_reply": {
+    "created": "Reply to rating created successfully",
+    "create_failed": "Failed to create reply to rating",
+    "replies_retrieved": "Replies retrieved successfully",
+    "get_failed": "Failed to retrieve replies",
+    "updated": "Reply updated successfully",
+    "deleted": "Reply deleted successfully"
   }
 }

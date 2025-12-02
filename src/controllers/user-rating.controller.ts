@@ -13,9 +13,13 @@ export const createOrUpdateRatingHandler = async (req: Request, res: Response) =
         const ratedUserId = Number(req.params.id);
         const { score, comment } = req.body;
 
-        const rating = await createOrUpdateRating(raterId, ratedUserId, score, comment);
-        // Created a new rating entry
-        res.status(201).json({ success: true, message: __('user_rating.rating_saved'), data: rating });
+        const result = await createOrUpdateRating(raterId, ratedUserId, score, comment);
+        const rating = (result as any).rating ?? result;
+        const isCreated = (result as any).isCreated === true;
+
+        // return 201 if created, 200 if updated
+        const status = isCreated ? 201 : 200;
+        res.status(status).json({ success: true, message: __('user_rating.rating_saved'), data: rating });
     } catch (error) {
         console.error('Rating error:', error);
         if (error instanceof Error) {
@@ -36,8 +40,13 @@ export const createOrUpdateRatingHandler = async (req: Request, res: Response) =
 export const getRatingsHandler = async (req: Request, res: Response) => {
     try {
         const ratedUserId = Number(req.params.id);
-        const ratings = await getRatingsForUser(ratedUserId);
-        res.status(200).json({ success: true, message: __('user_rating.ratings_retrieved'), data: ratings });
+
+        // Prefer validated query from middleware when available
+        const vq = (req as any).validatedQuery as any | undefined;
+        const query = vq ?? req.query;
+
+        const response = await getRatingsForUser(ratedUserId, query);
+        res.status(200).json(response);
     } catch (error) {
         console.error('Get ratings error:', error);
         res.status(500).json({ success: false, message: __('user_rating.get_ratings_failed') });
