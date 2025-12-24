@@ -17,8 +17,12 @@ export const createReplyHandler = async (req: Request, res: Response) => {
     res.status(201).json({ success: true, message: __('user_rating_reply.created'), data: created });
   } catch (err) {
     console.error('Create reply error:', err);
-    if (err instanceof Error && err.message === __('user_rating.rating_not_found')) {
-      return res.status(404).json({ success: false, message: err.message });
+    const msg = err instanceof Error ? err.message : '';
+    if (msg === __('user_rating.rating_not_found')) {
+      return res.status(404).json({ success: false, message: msg });
+    }
+    if (msg === __('general.forbidden')) {
+      return res.status(403).json({ success: false, message: msg });
     }
     res.status(500).json({ success: false, message: __('user_rating_reply.create_failed') });
   }

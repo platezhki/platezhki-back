@@ -12,9 +12,28 @@
     "refresh_token_required": "Refresh token is required",
     "token_refreshed": "Token refreshed successfully",
     "logout_success": "Logout successful",
-    "unauthorized": "Unauthorized access",
+    "unauthorized": "Unauthorized",
     "insufficient_permissions": "Insufficient permissions to perform this action",
-    "role_not_exists": "Role not exists"
+    "role_not_exists": "Role not exists",
+    "email_code_subject": "Email verification",
+    "email_code_text": "Your verification code: {{code}}. It is valid for {{minutes}} minutes.",
+    "email_code_html": "<p>Your verification code: <b>{{code}}</b></p><p>It is valid for {{minutes}} minutes.</p>",
+    "email_link_text": "Follow the link to verify your email: {{link}}. The link is valid for {{minutes}} minutes.",
+    "email_link_html": "<p>To verify your email, follow the link: <a href='{{link}}'>{{link}}</a></p><p>The link is valid for {{minutes}} minutes.</p>",
+    "email_code_sent": "Verification link has been sent to your email",
+    "email_already_verified": "Email is already verified",
+    "email_code_invalid": "Invalid verification code",
+    "email_code_expired": "Verification code has expired",
+    "email_verified_success": "Email has been successfully verified",
+    "email_and_code_required": "Email and code are required",
+    "google_code_required": "Google authorization code is required",
+    "password_reset_subject": "Password reset",
+    "password_reset_text": "To reset your password, follow the link: {{link}}. The link is valid for {{minutes}} minutes.",
+    "password_reset_html": "<p>To reset your password, follow the link: <a href=\"{{link}}\">Reset password</a></p><p>The link is valid for {{minutes}} minutes.</p>",
+    "password_reset_link_sent": "Password reset link has been sent to your email",
+    "password_reset_code_invalid": "Invalid password reset code",
+    "password_reset_code_expired": "Password reset code has expired",
+    "password_reset_success": "Password has been successfully reset"
   },
   "validation": {
     "validation_failed": "Validation failed",
@@ -81,8 +100,8 @@
   },
   "general": {
     "server_error": "Internal server error",
-    "unauthorized": "Unauthorized access",
-    "forbidden": "Access forbidden",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
     "not_found": "Resource not found"
   },
   "payment_service": {
@@ -152,7 +171,8 @@
     "user_retrieval_failed": "Failed to retrieve user",
     "current_user_retrieval_failed": "Failed to retrieve current user",
     "user_update_failed": "Failed to update user",
-    "user_creation_failed": "Failed to create user"
+    "user_creation_failed": "Failed to create user",
+    "active_count_failed": "Failed to get active users count"
   },
   "dictionaries": {
     "retrieved_successfully": "Dictionaries retrieved successfully",
@@ -200,7 +220,8 @@
     "rating_failed": "Failed to save rating",
     "get_ratings_failed": "Failed to retrieve ratings",
     "get_average_failed": "Failed to retrieve average rating",
-    "delete_failed": "Failed to delete rating"
+    "delete_failed": "Failed to delete rating",
+    "exist": "Rating already exists"
   },
   "user_rating_reply": {
     "created": "Reply to rating created successfully",

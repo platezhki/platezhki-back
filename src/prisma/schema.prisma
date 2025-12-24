@@ -9,34 +9,52 @@ datasource db {
 }
 
 model User {
-  id                   Int               @id @default(autoincrement())
+  id                   Int                 @id @default(autoincrement())
   username             String
   password             String
-  email                String            @unique
-  roleId               Int               @default(3)
+  email                String              @unique
+  roleId               Int                 @default(3)
   // Average rating aggregate fields (kept denormalized for fast queries)
-  averageRating        Float             @default(0)
-  ratingsCount         Int               @default(0)
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  averageRating        Float               @default(0)
+  ratingsCount         Int                 @default(0)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
   ownerId              Int?
-  isActive             Boolean           @default(true)
+  isActive             Boolean             @default(true)
+  emailVerified        Boolean             @default(false)
+  lastActivity         DateTime            @default(now())
   authTokens           AuthToken[]
   languages            Language[]
   offers               Offer[]
-  paymentServices      PaymentService[]  @relation("PaymentServiceCreatedBy")
-  ownedPaymentServices PaymentService[]  @relation("PaymentServiceOwner")
+  paymentServices      PaymentService[]    @relation("PaymentServiceCreatedBy")
+  ownedPaymentServices PaymentService[]    @relation("PaymentServiceOwner")
   updatedSettings      Setting[]
   translations         Translation[]
-  createdBy            User?             @relation("CreatedBy", fields: [ownerId], references: [id])
-  createdUsers         User[]            @relation("CreatedBy")
-  role                 Role              @relation(fields: [roleId], references: [id])
+  createdBy            User?               @relation("CreatedBy", fields: [ownerId], references: [id])
+  createdUsers         User[]              @relation("CreatedBy")
+  role                 Role                @relation(fields: [roleId], references: [id])
   // Ratings relations
-  ratingsGiven         UserRating[]      @relation("UserRatingsGiven")
-  ratingsReceived      UserRating[]      @relation("UserRatingsReceived")
+  ratingsGiven         UserRating[]        @relation("UserRatingsGiven")
+  ratingsReceived      UserRating[]        @relation("UserRatingsReceived")
   UserRatingReply      UserRatingReply[]
+  emailVerifications   EmailVerification[]
+  passwordReset        PasswordReset[]
 
   @@map("users")
+}
+
+model EmailVerification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  email     String
+  code      String
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@map("email_verifications")
 }
 
 model Role {
@@ -459,4 +477,18 @@ model UserActivity {
   createdAt  DateTime @default(now())
 
   @@map("user_activities")
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  email     String
+  code      String
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@map("password_resets")
 }

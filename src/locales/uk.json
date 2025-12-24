@@ -14,7 +14,26 @@
     "logout_success": "Успішний вихід",
     "unauthorized": "Неавторизований доступ",
     "insufficient_permissions": "Недостатньо прав для виконання цієї дії",
-    "role_not_exists": "Роль не існує"
+    "role_not_exists": "Роль не існує",
+    "email_code_subject": "Код підтвердження email",
+    "email_code_text": "Ваш код підтвердження: {{code}}. Він дійсний {{minutes}} хвилин.",
+    "email_code_html": "<p>Ваш код підтвердження: <b>{{code}}</b></p><p>Він дійсний {{minutes}} хвилин.</p>",
+    "email_code_sent": "Код підтвердження надіслано на вашу пошту",
+    "email_already_verified": "Email вже підтверджено",
+    "email_code_invalid": "Невірний код підтвердження",
+    "email_code_expired": "Строк дії коду минув",
+    "email_verified_success": "Email успішно підтверджено",
+    "email_and_code_required": "Потрібні email і код",
+    "google_code_required": "Потрібен код авторизації Google",
+    "email_link_text": "Для підтвердження перейдіть за посиланням: {{link}}. Посилання дійсне {{minutes}} хвилин.",
+    "email_link_html": "<p>Для підтвердження перейдіть за посиланням: <a href='{{link}}'>{{link}}</a></p><p>Посилання дійсне {{minutes}} хвилин.</p>",
+    "password_reset_subject": "Скидання пароля",
+    "password_reset_text": "Щоб скинути пароль, перейдіть за посиланням: {{link}}. Посилання дійсне {{minutes}} хвилин.",
+    "password_reset_html": "<p>Щоб скинути пароль, перейдіть за посиланням: <a href=\"{{link}}\">Скинути пароль</a></p><p>Посилання дійсне {{minutes}} хвилин.</p>",
+    "password_reset_link_sent": "Посилання для скидання пароля надіслано на вашу пошту",
+    "password_reset_code_invalid": "Невірний код для скидання пароля",
+    "password_reset_code_expired": "Термін дії коду для скидання пароля минув",
+    "password_reset_success": "Пароль успішно скинуто"
   },
   "validation": {
     "validation_failed": "Помилка валідації",
@@ -81,7 +100,7 @@
   },
   "general": {
     "server_error": "Внутрішня помилка сервера",
-    "unauthorized": "Неавторизований доступ",
+    "unauthorized": "Неавторизовано",
     "forbidden": "Доступ заборонено",
     "not_found": "Ресурс не знайдено"
   },
@@ -152,7 +171,8 @@
     "user_retrieval_failed": "Не вдалося отримати користувача",
     "current_user_retrieval_failed": "Не вдалося отримати поточного користувача",
     "user_update_failed": "Не вдалося оновити користувача",
-    "user_creation_failed": "Не вдалося створити користувача"
+    "user_creation_failed": "Не вдалося створити користувача",
+    "active_count_failed": "Не вдалося отримати кількість активних користувачів"
   },
   "dictionaries": {
     "retrieved_successfully": "Словники успішно отримано",
@@ -178,7 +198,8 @@
     "rating_failed": "Не вдалося зберегти оцінку",
     "get_ratings_failed": "Не вдалося отримати оцінки",
     "get_average_failed": "Не вдалося отримати середню оцінку",
-    "delete_failed": "Не вдалося видалити оцінку"
+    "delete_failed": "Не вдалося видалити оцінку",
+    "exist": "Оцінка вже існує"
   },
   "user_rating_reply": {
     "created": "Відповідь на відгук успішно додана",

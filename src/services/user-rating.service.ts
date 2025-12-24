@@ -5,35 +5,23 @@ const prisma = new PrismaClient();
 
 export const createOrUpdateRating = async (raterId: number, ratedUserId: number, score: number, comment?: string) => {
     try {
-        // Prevent rating yourself
         if (raterId === ratedUserId) {
             throw new Error(__('user_rating.cannot_rate_self'));
         }
 
-        // Ensure rated user exists and is active
         const ratedUser = await prisma.user.findFirst({ where: { id: ratedUserId, isActive: true } });
         if (!ratedUser) {
             throw new Error(__('user.user_not_found'));
         }
 
-        // Validate score server-side as a safety net (0-5)
         if (typeof score !== 'number' || score < 0 || score > 5) {
-            throw new Error(__('user_rating.invalid_score') || 'Invalid score');
+            throw new Error(__('user_rating.invalid_score'));
         }
 
-        // If a rating from this rater to this user already exists, update it; otherwise create new
         const existing = await (prisma as any).userRating.findFirst({ where: { raterId, ratedUserId } });
 
         if (existing) {
-            const updated = await (prisma as any).userRating.update({
-                where: { id: existing.id },
-                data: { score, comment }
-            });
-
-            // Update denormalized aggregates on User
-            await updateUserRatingAggregate(ratedUserId);
-
-            return { rating: updated, isCreated: false };
+            throw new Error(__('user_rating.exist'));
         }
 
         const created = await (prisma as any).userRating.create({

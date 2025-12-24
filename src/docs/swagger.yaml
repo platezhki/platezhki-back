@@ -40,6 +40,10 @@ components:
         isActive:
           type: boolean
           example: true
+        lastActivity:
+          type: string
+          format: date-time
+          example: "2025-12-05T12:34:56.000Z"
         role:
           $ref: '#/components/schemas/Role'
 
@@ -400,6 +404,16 @@ components:
         - trafficSources
         - trafficTypes
 
+    GoogleLoginRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: Authorization code received from Google OAuth
+          example: "4/0AdQt8..."
+
     UserRating:
       type: object
       properties:
@@ -435,16 +449,12 @@ components:
       properties:
         id:
           type: integer
-          example: 1
         authorId:
           type: integer
-          example: 2
         userRatingId:
           type: integer
-          example: 5
         comment:
           type: string
-          example: "Спасибо за отзыв"
         author:
           type: object
           properties:
@@ -452,14 +462,15 @@ components:
               type: integer
             username:
               type: string
+        isFromRatedUser:
+          type: boolean
+          description: True if the reply author is the same user the rating was written about (rated user)
         createdAt:
           type: string
           format: date-time
-          example: "2025-11-22T12:34:56.000Z"
         updatedAt:
           type: string
           format: date-time
-          example: "2025-11-22T12:34:56.000Z"
 
     UserRatingCreateRequest:
       type: object
@@ -744,6 +755,54 @@ components:
         value:
           type: string
 
+    EmailSendCodeRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+    EmailVerifyRequest:
+      type: object
+      required: [email, code]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        code:
+          type: string
+          example: "123456"
+    PasswordResetRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+    PasswordResetConfirm:
+      type: object
+      required:
+        - email
+        - code
+        - newPassword
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        code:
+          type: string
+          example: "123456"
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          example: "NewStrongPass123"
+
   parameters:
     PayInMethodsQuery:
       name: payInMethods
@@ -779,7 +838,7 @@ components:
 paths:
   /auth/login:
     post:
-      summary: User login
+      summary: User login (email or username)
       tags: [Authentication]
       requestBody:
         required: true
@@ -788,15 +847,22 @@ paths:
             schema:
               type: object
               required:
-                - username
                 - password
               properties:
+                login:
+                  type: string
+                  description: Email or username (alternative to username)
+                  example: user@example.com
                 username:
                   type: string
+                  description: Username (alternative to login)
                   example: john_doe
                 password:
                   type: string
                   example: password123
+              anyOf:
+                - required: [login]
+                - required: [username]
       responses:
         '200':
           description: Login successful
@@ -908,6 +974,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Success'
+  /auth/google:
+    post:
+      summary: Login or register via Google OAuth
+      description: Exchanges authorization code for tokens, verifies id_token, and logs in or registers a user based on Google email.
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleLoginRequest'
+      responses:
+        '200':
+          description: Successful Google login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+        '400':
+          description: Bad Request
+        '500':
+          description: Server error
   /dictionaries:
     get:
       summary: Get all dictionaries
@@ -1125,7 +1227,7 @@ paths:
     patch:
       summary: Update current user
       tags: [Users]
-      description: Updates information about the currently authenticated user
+      description: Updates the currently authenticated user. Only username and password can be changed.
       security:
         - bearerAuth: []
       requestBody:
@@ -1138,13 +1240,14 @@ paths:
                 username:
                   type: string
                   example: "newusername"
-                email:
+                password:
                   type: string
-                  format: email
-                  example: "newemail@example.com"
-                roleId:
-                  type: integer
-                  example: 2
+                  format: password
+                  minLength: 6
+                  example: "NewStrongPass123"
+              anyOf:
+                - required: [username]
+                - required: [password]
       responses:
         '200':
           description: User updated successfully
@@ -1158,7 +1261,7 @@ paths:
                       data:
                         $ref: '#/components/schemas/User'
         '400':
-          description: Bad request (username/email already exists)
+          description: Bad request (username already exists or missing fields)
           content:
             application/json:
               schema:
@@ -1285,6 +1388,61 @@ paths:
                 $ref: '#/components/schemas/Error'
         '500':
           description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/token/{userId}:
+    get:
+      summary: Admin - Get auth tokens for a user by ID
+      tags: [Users]
+      description: Returns a new set of access and refresh tokens for a specific user. This is an admin-only endpoint.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+          description: User ID to generate tokens for
+          example: 2
+      responses:
+        '200':
+          description: Tokens generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  accessToken:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  refreshToken:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (admin only)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
           content:
             application/json:
               schema:
@@ -3176,3 +3334,353 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: Reply or rating not found
+  /users/email/send-code:
+    post:
+      summary: Send email verification code (current user)
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Verification code sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/email/verify:
+    post:
+      summary: Verify email with code (current user)
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  example: "123456"
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Invalid code or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/password/request-reset:
+    post:
+      summary: Request password reset link
+      description: Sends a password reset link to the user email. The link contains a code parameter. The frontend URL is configured via environment variable.
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: Password reset link sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Invalid email format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/password/reset:
+    post:
+      summary: Reset password using code
+      description: Resets the user password using the code received in email link.
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Invalid or expired code / validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/admin:
+    get:
+      summary: Admin - get users list with pagination, search, filters and sorting
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Search by username or email (case-insensitive)
+        - in: query
+          name: id
+          schema:
+            type: integer
+        - in: query
+          name: ids
+          schema:
+            type: string
+          description: Space-separated user IDs (e.g. "12 34 56"). When provided, takes precedence over id and q.
+        - in: query
+          name: roleId
+          schema:
+            type: integer
+        - in: query
+          name: ownerId
+          schema:
+            type: integer
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+        - in: query
+          name: emailVerified
+          schema:
+            type: boolean
+        - in: query
+          name: username
+          schema:
+            type: string
+        - in: query
+          name: email
+          schema:
+            type: string
+        - in: query
+          name: averageRatingMin
+          schema:
+            type: number
+        - in: query
+          name: averageRatingMax
+          schema:
+            type: number
+        - in: query
+          name: ratingsCountMin
+          schema:
+            type: integer
+        - in: query
+          name: ratingsCountMax
+          schema:
+            type: integer
+        - in: query
+          name: createdAtFrom
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: createdAtTo
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: updatedAtFrom
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: updatedAtTo
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: lastActivityFrom
+          schema:
+            type: string
+            format: date-time
+          description: Filter users with lastActivity >= this date
+        - in: query
+          name: lastActivityTo
+          schema:
+            type: string
+            format: date-time
+          description: Filter users with lastActivity <= this date
+        - in: query
+          name: sort_column
+          schema:
+            type: string
+            enum: [id, username, email, roleId, averageRating, ratingsCount, createdAt, updatedAt, lastActivity, ownerId, isActive, emailVerified]
+            default: createdAt
+      responses:
+        '200':
+          description: Users list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (admin or moderator only)
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/admin/{id}:
+    patch:
+      summary: Admin - update user by ID (edit all fields)
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                roleId:
+                  type: integer
+                ownerId:
+                  type: integer
+                isActive:
+                  type: boolean
+                emailVerified:
+                  type: boolean
+              additionalProperties: false
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '400':
+          description: Username or email conflict / validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (admin or moderator only)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

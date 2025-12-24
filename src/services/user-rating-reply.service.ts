@@ -13,14 +13,26 @@ export const createReply = async (authorId: number, ratingId: number, comment: s
     const author = await (prisma as any).user.findFirst({ where: { id: authorId, isActive: true } });
     if (!author) throw new Error(__('auth.unauthorized'));
 
+    // Permission check: allow admin, the rater who left the rating, or the rated user
+    const isAdmin = (author as any).roleId === 1;
+    const isRater = authorId === (rating as any).raterId;
+    const isRatedUser = authorId === (rating as any).ratedUserId;
+    if (!isAdmin && !isRater && !isRatedUser) {
+      throw new Error(__('general.forbidden'));
+    }
+
     const created = await (prisma as any).userRatingReply.create({
-      data: { authorId, userRatingId: ratingId, comment }
+      data: { authorId, userRatingId: ratingId, comment },
+      include: { author: { select: { id: true, username: true } } }
     });
 
     // increment repliesCount on user rating
     await (prisma as any).userRating.update({ where: { id: ratingId }, data: { repliesCount: { increment: 1 } as any } as any });
 
-    return created;
+    // computed flag: author is the rated user of the rating
+    const isFromRatedUser = created.authorId === rating.ratedUserId;
+
+    return { ...created, isFromRatedUser } as any;
   } catch (err) {
     throw err;
   }
@@ -28,6 +40,10 @@ export const createReply = async (authorId: number, ratingId: number, comment: s
 
 export const getRepliesForRating = async (ratingId: number, limit?: number, skip?: number) => {
   try {
+    // fetch rating to know rated user id
+    const rating = await (prisma as any).userRating.findFirst({ where: { id: ratingId }, select: { ratedUserId: true } });
+    if (!rating) throw new Error(__('user_rating.rating_not_found'));
+
     const findOptions: any = {
       where: { userRatingId: ratingId },
       include: { author: { select: { id: true, username: true } } },
@@ -38,7 +54,9 @@ export const getRepliesForRating = async (ratingId: number, limit?: number, skip
     if (skip !== undefined) findOptions.skip = skip;
 
     const replies = await (prisma as any).userRatingReply.findMany(findOptions);
-    return replies;
+    // append flag per reply
+    const mapped = replies.map((r: any) => ({ ...r, isFromRatedUser: r.authorId === rating.ratedUserId }));
+    return mapped;
   } catch (err) {
     throw err;
   }
@@ -50,7 +68,12 @@ export const updateReply = async (replyId: number, newComment: string) => {
     if (!reply) throw new Error(__('user_rating.rating_not_found'));
 
     const updated = await (prisma as any).userRatingReply.update({ where: { id: replyId }, data: { comment: newComment } });
-    return updated;
+
+    // enrich with flag as well
+    const rating = await (prisma as any).userRating.findFirst({ where: { id: updated.userRatingId }, select: { ratedUserId: true } });
+    const isFromRatedUser = rating ? updated.authorId === rating.ratedUserId : false;
+
+    return { ...updated, isFromRatedUser } as any;
   } catch (err) {
     throw err;
   }

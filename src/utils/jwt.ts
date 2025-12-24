@@ -7,7 +7,6 @@ const JWT_REFRESH_SECRET = 'your-refresh-secret-key';
 export interface JWTPayload {
   userId: number;
   username: string;
-  roleId: number;
   iat?: number;
   exp?: number;
 }
@@ -29,9 +28,9 @@ export const generateRefreshToken = (userId: number): { token: string; tokenId: 
     userId,
     tokenId,
   };
-  
+
   const token = jwt.sign(payload, JWT_REFRESH_SECRET);
-  
+
   return { token, tokenId };
 };
 
@@ -51,11 +50,10 @@ export const verifyRefreshToken = (token: string): RefreshTokenPayload => {
   }
 };
 
-export const generateTokenPair = (user: { id: number; username: string; roleId: number }) => {
+export const generateTokenPair = (user: { id: number; username: string }) => {
   const accessToken = generateAccessToken({
     userId: user.id,
     username: user.username,
-    roleId: user.roleId,
   });
 
   const { token: refreshToken, tokenId } = generateRefreshToken(user.id);

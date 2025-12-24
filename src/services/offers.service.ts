@@ -1428,12 +1428,12 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
             });
         }
 
-        // Filter by pay in max limit - filter payment services that have offers with payInMaxLimit >= filter value
-        // (user wants to pay in at most X, so offer's max limit should be >= X)
+        // Filter by pay in max limit - exclude offers whose upper bound exceeds the provided maximum
+        // (user wants max allowed to be X, so offer's payInMaxLimit should be <= X)
         if (filters?.payInMaxLimit) {
             offerConditions.push({
                 payInMaxLimit: {
-                    gte: Number(filters.payInMaxLimit)
+                    lte: Number(filters.payInMaxLimit)
                 }
             });
         }
@@ -1448,12 +1448,12 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
             });
         }
 
-        // Filter by pay out max limit - filter payment services that have offers with payOutMaxLimit >= filter value
-        // (user wants to pay out at most X, so offer's max limit should be >= X)
+        // Filter by pay out max limit - exclude offers whose upper bound exceeds the provided maximum
+        // (user wants max allowed to be X, so offer's payOutMaxLimit should be <= X)
         if (filters?.payOutMaxLimit) {
             offerConditions.push({
                 payOutMaxLimit: {
-                    gte: Number(filters.payOutMaxLimit)
+                    lte: Number(filters.payOutMaxLimit)
                 }
             });
         }

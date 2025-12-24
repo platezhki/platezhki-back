@@ -2,8 +2,8 @@
   "auth": {
     "user_not_found": "Пользователь не найден",
     "invalid_password": "Неверный пароль",
-    "username_exists": "Пользователь с таким именем уже существует",
-    "email_exists": "Пользователь с таким email уже существует",
+    "username_exists": "Имя пользователя уже занято",
+    "email_exists": "Email уже используется",
     "registration_success": "Пользователь успешно зарегистрирован",
     "login_success": "Вход выполнен успешно",
     "invalid_credentials": "Неверные учетные данные",
@@ -14,7 +14,19 @@
     "logout_success": "Выход выполнен успешно",
     "unauthorized": "Неавторизованный доступ",
     "insufficient_permissions": "Недостаточно прав для выполнения этого действия",
-    "role_not_exists": "Роль не существует"
+    "role_not_exists": "Роль не существует",
+    "email_code_subject": "Подтверждение email",
+    "email_code_text": "Ваш код подтверждения: {{code}}. Он действителен {{minutes}} минут.",
+    "email_code_html": "<p>Ваш код подтверждения: <b>{{code}}</b></p><p>Он действителен {{minutes}} минут.</p>",
+    "email_link_text": "Перейдите по ссылке для подтверждения email: {{link}}. Ссылка действует {{minutes}} минут.",
+    "email_link_html": "<p>Для подтверждения email перейдите по ссылке: <a href='{{link}}'>{{link}}</a></p><p>Ссылка действует {{minutes}} минут.</p>",
+    "password_reset_subject": "Сброс пароля",
+    "password_reset_text": "Для сброса пароля перейдите по ссылке: {{link}}. Ссылка действует {{minutes}} минут.",
+    "password_reset_html": "<p>Для сброса пароля перейдите по ссылке: <a href=\"{{link}}\">Сбросить пароль</a></p><p>Ссылка действует {{minutes}} минут.</p>",
+    "password_reset_link_sent": "Ссылка для сброса пароля отправлена на вашу почту",
+    "password_reset_code_invalid": "Неверный код сброса пароля",
+    "password_reset_code_expired": "Срок действия кода сброса пароля истёк",
+    "password_reset_success": "Пароль успешно сброшен"
   },
   "validation": {
     "validation_failed": "Ошибка валидации",
@@ -80,8 +92,8 @@
     "payout_max_limit_gte_min": "Максимальный лимит вывода должен быть больше или равен минимальному"
   },
   "general": {
-    "server_error": "Внутренняя ошибка сервера",
-    "unauthorized": "Неавторизованный доступ",
+    "server_error": "Ошибка сервера",
+    "unauthorized": "Неавторизовано",
     "forbidden": "Доступ запрещен",
     "not_found": "Ресурс не найден"
   },
@@ -138,9 +150,17 @@
     "updated_successfully": "Пользователь успешно обновлен",
     "retrieved_successfully": "Пользователь успешно получен",
     "current_user_retrieved_successfully": "Текущий пользователь успешно получен",
+    "user_updated_successfully": "Пользователь успешно обновлен",
     "not_found": "Пользователь не найден",
-    "username_exists": "Пользователь с таким именем уже существует",
-    "email_exists": "Пользователь с таким email уже существует"
+    "username_exists": "Имя пользователя уже занято",
+    "email_exists": "Email уже используется",
+    "user_not_found": "Пользователь не найден",
+    "users_retrieved_successfully": "Пользователи успешно получены",
+    "users_retrieval_failed": "Не удалось получить пользователей",
+    "current_user_retrieval_failed": "Не удалось получить текущего пользователя",
+    "user_creation_failed": "Не удалось создать пользователя",
+    "user_update_failed": "Не удалось обновить пользователя",
+    "active_count_failed": "Не удалось получить количество активных пользователей"
   },
   "roles": {
     "created_successfully": "Роль успешно создана",
@@ -173,7 +193,8 @@
     "rating_failed": "Не удалось сохранить оценку",
     "get_ratings_failed": "Не удалось получить оценки",
     "get_average_failed": "Не удалось получить среднюю оценку",
-    "delete_failed": "Не удалось удалить оценку"
+    "delete_failed": "Не удалось удалить оценку",
+    "exist": "Оценка уже существует"
   },
   "user_rating_reply": {
     "created": "Ответ на отзыв успешно добавлен",
