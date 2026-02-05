@@ -755,6 +755,25 @@ components:
         value:
           type: string
 
+    SiteSettings:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        maintenanceMode:
+          type: boolean
+          description: When true, the site is in maintenance/closed mode
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00.000Z"
+
     EmailSendCodeRequest:
       type: object
       required: [email]
@@ -3674,6 +3693,90 @@ paths:
                 $ref: '#/components/schemas/Error'
         '404':
           description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /site-settings:
+    get:
+      summary: Get site settings
+      tags: [Site Settings]
+      description: Returns site settings including maintenance mode status. This endpoint is public.
+      responses:
+        '200':
+          description: Site settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Site settings retrieved successfully"
+                  data:
+                    $ref: '#/components/schemas/SiteSettings'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update site settings
+      tags: [Site Settings]
+      description: Updates site settings (requires admin authentication)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                maintenanceMode:
+                  type: boolean
+                  description: Enable or disable maintenance mode (closed site)
+                  example: true
+      responses:
+        '200':
+          description: Site settings updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Site settings updated successfully"
+                  data:
+                    $ref: '#/components/schemas/SiteSettings'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (admin only)
           content:
             application/json:
               schema:

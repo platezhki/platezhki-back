@@ -43,10 +43,14 @@
     "username_too_short": "Ім'я користувача повинно містити принаймні 3 символи",
     "name_required": "Назва обов'язкова",
     "name_too_long": "Назва не повинна перевищувати 255 символів",
+    "description_required": "Опис обов'язковий",
+    "service_url_required": "URL сервісу обов'язковий",
+    "invalid_service_url": "Некоректний URL сервісу",
+    "established_at_required": "Дата заснування обов'язкова",
     "logo_file_required": "Файл логотипу обов'язковий",
     "logo_filename_required": "Назва файлу логотипу обов'язкова",
     "description_too_long": "Опис не повинен перевищувати 255 символів",
-    "invalid_date_format": "Дата повинна бути у форматі ДД.ММ.РРРР",
+    "invalid_date_format": "Дата повинна бути у форматі ДД.ММ.РРРР або РРРР",
     "contacts_unique": "Контакти повинні бути унікальними",
     "payin_methods_required": "Потрібен принаймні один метод поповнення",
     "payout_methods_required": "Потрібен принаймні один метод виводу",
@@ -208,5 +212,9 @@
     "get_failed": "Не вдалося отримати відповіді",
     "updated": "Відповідь успішно оновлена",
     "deleted": "Відповідь успішно видалена"
+  },
+  "site_settings": {
+    "retrieved_successfully": "Налаштування сайту успішно отримані",
+    "updated_successfully": "Налаштування сайту успішно оновлені"
   }
 }

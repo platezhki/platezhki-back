@@ -1,10 +1,19 @@
 import express from "express";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
 import { specs } from "./config/swagger";
 import routes from "./routes";
 
 const app = express();
+
+// Enable CORS for all origins with credentials support
+app.use(cors({
+  origin: true, // Reflects the request origin, allowing all origins with credentials
+  credentials: true, // Allow cookies and authorization headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}));
 
 // Configure body parser with increased limits for file uploads
 app.use(express.json({

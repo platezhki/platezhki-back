@@ -1,6 +1,8 @@
 import { Router } from "express";
 import userRoutes from "./user.routes";
 import paymentServicesRoutes from "./payment-services.routes";
+import { getSiteSettingsHandler } from "../controllers/site-settings.controller";
+import siteSettingsRoutes from "./site-settings.routes";
 import settingsRoutes from "./settings.routes";
 import { authenticateToken } from "../middlewares/auth";
 import rolesRoutes from "./roles.routes";
@@ -8,6 +10,10 @@ import offersRoutes from "./offers.routes";
 
 const router = Router();
 
+// Site settings (public read)
+router.get("/site-settings", getSiteSettingsHandler);
+
+router.use("/site-settings", siteSettingsRoutes);
 // Private routes - authentication required
 router.use("/users", userRoutes);
 router.use("/payment-services", paymentServicesRoutes);

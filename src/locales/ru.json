@@ -36,10 +36,14 @@
     "username_too_short": "Имя пользователя должно содержать минимум 3 символа",
     "name_required": "Имя обязательно",
     "name_too_long": "Имя не должно превышать 255 символов",
+    "description_required": "Описание обязательно",
+    "service_url_required": "URL сервиса обязателен",
+    "invalid_service_url": "Некорректный URL сервиса",
+    "established_at_required": "Дата основания обязательна",
     "logo_file_required": "Файл логотипа обязателен",
     "logo_filename_required": "Имя файла логотипа обязательно",
     "description_too_long": "Описание не должно превышать 255 символов",
-    "invalid_date_format": "Дата должна быть в формате ДД.ММ.ГГГГ",
+    "invalid_date_format": "Дата должна быть в формате ДД.ММ.ГГГГ или ГГГГ",
     "contacts_unique": "Контакты должны быть уникальными",
     "payin_methods_required": "Необходим минимум один способ пополнения",
     "payout_methods_required": "Необходим минимум один способ вывода",
@@ -203,5 +207,9 @@
     "get_failed": "Не удалось получить ответы на отзыв",
     "updated": "Ответ на отзыв успешно обновлён",
     "deleted": "Ответ на отзыв успешно удалён"
+  },
+  "site_settings": {
+    "retrieved_successfully": "Настройки сайта успешно получены",
+    "updated_successfully": "Настройки сайта успешно обновлены"
   }
 }

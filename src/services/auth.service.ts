@@ -180,7 +180,6 @@ export const loginWithGoogle = async (code: string, referralCode?: string) => {
         throw new Error(__('auth.role_not_exists'));
       }
 
-      // Выберем владельца (админ) при создании
       const adminUser = await prisma.user.findFirst({ where: { roleId: 1 }, select: { id: true } });
 
       user = await prisma.user.create({
@@ -190,11 +189,18 @@ export const loginWithGoogle = async (code: string, referralCode?: string) => {
           email,
           roleId: roleUser.id,
           ownerId: adminUser?.id || 1,
+          emailVerified: true,
         },
         include: { role: true },
       });
 
       // user = await prisma.user.update({ where: { id: user.id }, data: { ownerId: user.id }, include: { role: true } });
+    } else if (!user.emailVerified) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: true },
+        include: { role: true },
+      });
     }
 
     if (user.isActive === false) {

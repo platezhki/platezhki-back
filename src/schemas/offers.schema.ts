@@ -1,17 +1,23 @@
 import { z } from "zod";
 import { __ } from "../utils/i18n";
 
+// Helper to accept either a single number or array of numbers and always transform to number[]
+const numOrArray = z.union([z.number(), z.array(z.number())]).transform((v) => Array.isArray(v) ? v : [v]);
+
 export const createOfferSchema = z.object({
   body: z.object({
     name: z.string()
-           .min(1, __("validation.name_required"))
-           .max(255, __("validation.name_too_long")),
+      .min(1, __("validation.name_required"))
+      .max(255, __("validation.name_too_long")),
     countries: z.array(z.number()).min(1, __("validation.countries_required")),
     currencies: z.array(z.number()).min(1, __("validation.currencies_required")),
     paymentSystemTypes: z.number().min(1, __("validation.payment_system_types_required")),
+    // paymentSystemTypes: z.array(z.number()).min(1, __("validation.payment_system_types_required")),
     trafficVolumeMin: z.number().min(0, __("validation.traffic_volume_min_invalid")),
     trafficVolumeMax: z.number().min(0, __("validation.traffic_volume_max_invalid")),
-    paymentMethodId: z.array(z.number()).min(1, __("validation.payment_method_required")),
+    // accept either paymentMethods or legacy paymentMethodId (frontend may send either)
+    paymentMethods: numOrArray.optional(),
+    paymentMethodId: numOrArray.optional(),
     payInFee: z.number().min(0, __("validation.payin_fee_invalid")).max(100, __("validation.payin_fee_invalid")),
     payOutFee: z.number().min(0, __("validation.payout_fee_invalid")).max(100, __("validation.payout_fee_invalid")),
     payInMinLimit: z.number().min(0, __("validation.payin_min_limit_invalid")),
@@ -20,22 +26,31 @@ export const createOfferSchema = z.object({
     payOutMaxLimit: z.number().min(0, __("validation.payout_max_limit_invalid")),
     support247: z.boolean(),
     automatics: z.boolean(),
-    trafficSources: z.array(z.number()).min(1, __("validation.traffic_sources_required")),
-    trafficTypes: z.array(z.number()).min(1, __("validation.traffic_types_required")),
-    connectionTypes: z.array(z.number()).min(1, __("validation.connection_types_required")),
-    balanceTypes: z.array(z.number()).optional(),
+    trafficSources: numOrArray.refine((arr) => arr.length > 0, __("validation.traffic_sources_required")),
+    trafficTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.traffic_types_required")),
+    connectionTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.connection_types_required")),
+    balanceTypes: numOrArray.optional(),
     legalPerson: z.boolean(),
     isActive: z.boolean().optional().default(true),
-  }).refine((data) => data.trafficVolumeMax >= data.trafficVolumeMin, {
-    message: __("validation.traffic_volume_max_gte_min"),
-    path: ["trafficVolumeMax"]
-  }).refine((data) => data.payInMaxLimit >= data.payInMinLimit, {
-    message: __("validation.payin_max_limit_gte_min"),
-    path: ["payInMaxLimit"]
-  }).refine((data) => data.payOutMaxLimit >= data.payOutMinLimit, {
-    message: __("validation.payout_max_limit_gte_min"),
-    path: ["payOutMaxLimit"]
-  }),
+  })
+    // require at least one of paymentMethods or paymentMethodId to be present and non-empty
+    .refine((data) => {
+      const pm1 = Array.isArray((data as any).paymentMethods) ? (data as any).paymentMethods : undefined;
+      const pm2 = Array.isArray((data as any).paymentMethodId) ? (data as any).paymentMethodId : undefined;
+      return (pm1 && pm1.length > 0) || (pm2 && pm2.length > 0);
+    }, {
+      message: __("validation.payment_method_required"),
+      path: ["paymentMethods"]
+    }).refine((data) => data.trafficVolumeMax >= data.trafficVolumeMin, {
+      message: __("validation.traffic_volume_max_gte_min"),
+      path: ["trafficVolumeMax"]
+    }).refine((data) => data.payInMaxLimit >= data.payInMinLimit, {
+      message: __("validation.payin_max_limit_gte_min"),
+      path: ["payInMaxLimit"]
+    }).refine((data) => data.payOutMaxLimit >= data.payOutMinLimit, {
+      message: __("validation.payout_max_limit_gte_min"),
+      path: ["payOutMaxLimit"]
+    }),
 });
 
 export const getOffersSchema = z.object({
@@ -64,13 +79,14 @@ export const getOfferSchema = z.object({
 
 export const updateOfferSchema = z.object({
   body: z.object({
-    name: z.string().min(1, __("validation.name_required")).max(255, __("validation.name_too_long")).optional(),
-    countries: z.array(z.number()).min(1, __("validation.countries_required")).optional(),
-    currencies: z.array(z.number()).min(1, __("validation.currencies_required")).optional(),
-    paymentSystemTypes: z.number().min(1, __("validation.payment_system_types_required")),
+    name: z.string().min(1, __("validation.name_required")).max(255, __("validation.name_too_long")),
+    countries: z.array(z.number()).min(1, __("validation.countries_required")),
+    currencies: z.array(z.number()).min(1, __("validation.currencies_required")),
+    paymentSystemTypes: z.array(z.number()).min(1, __("validation.payment_system_types_required")),
     trafficVolumeMin: z.number().min(0, __("validation.traffic_volume_min_invalid")).optional(),
     trafficVolumeMax: z.number().min(0, __("validation.traffic_volume_max_invalid")).optional(),
-    paymentMethodId: z.array(z.number()).min(1, __("validation.payment_method_required")),
+    // for update accept only paymentMethods (legacy paymentMethodId removed)
+    paymentMethods: numOrArray.optional(),
     payInFee: z.number().min(0, __("validation.payin_fee_invalid")).max(100, __("validation.payin_fee_invalid")),
     payOutFee: z.number().min(0, __("validation.payout_fee_invalid")).max(100, __("validation.payout_fee_invalid")),
     payInMinLimit: z.number().min(0, __("validation.payin_min_limit_invalid")).optional(),
@@ -79,9 +95,10 @@ export const updateOfferSchema = z.object({
     payOutMaxLimit: z.number().min(0, __("validation.payout_max_limit_invalid")).optional(),
     support247: z.boolean().optional(),
     automatics: z.boolean().optional(),
-    trafficSources: z.array(z.number()).min(1, __("validation.traffic_sources_required")).optional(),
-    trafficTypes: z.array(z.number()).min(1, __("validation.traffic_types_required")).optional(),
-    connectionTypes: z.array(z.number()).min(1, __("validation.connection_types_required")).optional(),
+    trafficSources: numOrArray.refine((arr) => arr.length > 0, __("validation.traffic_sources_required")),
+    trafficTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.traffic_types_required")),
+    connectionTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.connection_types_required")),
+    balanceTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.balance_types_required")),
     legalPerson: z.boolean().optional(),
     slug: z.string().min(1, __("validation.slug_required")).optional(),
     isActive: z.boolean().optional(),
@@ -207,7 +224,9 @@ export const createOfferBodySchema = z.object({
   paymentSystemTypes: z.array(z.number()).min(1, __("validation.payment_system_types_required")),
   trafficVolumeMin: z.number().min(0, __("validation.traffic_volume_min_invalid")),
   trafficVolumeMax: z.number().min(0, __("validation.traffic_volume_max_invalid")),
-  paymentMethodId: z.number().min(1, __("validation.payment_method_required")),
+  // accept either paymentMethods or legacy paymentMethodId for create; require at least one non-empty
+  paymentMethods: z.array(z.number()).optional(),
+  paymentMethodId: z.array(z.number()).optional(),
   payInMinFee: z.number().min(0, __("validation.payin_min_fee_invalid")).max(100, __("validation.payin_fee_max_invalid")),
   payInMaxFee: z.number().min(0, __("validation.payin_max_fee_invalid")).max(100, __("validation.payin_fee_max_invalid")),
   payOutMinFee: z.number().min(0, __("validation.payout_min_fee_invalid")).max(100, __("validation.payout_fee_max_invalid")),
@@ -221,8 +240,16 @@ export const createOfferBodySchema = z.object({
   trafficSources: z.array(z.number()).min(1, __("validation.traffic_sources_required")),
   trafficTypes: z.array(z.number()).min(1, __("validation.traffic_types_required")),
   connectionTypes: z.array(z.number()).min(1, __("validation.connection_types_required")),
+  balanceTypes: z.array(z.number()).min(1, __("validation.balance_types_required")),
   legalPerson: z.boolean(),
   isActive: z.boolean().optional().default(true),
+}).refine((data) => {
+  const pm1 = Array.isArray((data as any).paymentMethods) ? (data as any).paymentMethods : undefined;
+  const pm2 = Array.isArray((data as any).paymentMethodId) ? (data as any).paymentMethodId : undefined;
+  return (pm1 && pm1.length > 0) || (pm2 && pm2.length > 0);
+}, {
+  message: __("validation.payment_method_required"),
+  path: ["paymentMethods"]
 }).refine((data) => data.trafficVolumeMax >= data.trafficVolumeMin, {
   message: __("validation.traffic_volume_max_gte_min"),
   path: ["trafficVolumeMax"]
@@ -241,13 +268,13 @@ export const createOfferBodySchema = z.object({
 });
 
 export const updateOfferBodySchema = z.object({
-  name: z.string().min(1, __("validation.name_required")).max(255, __("validation.name_too_long")).optional(),
-  countries: z.array(z.number()).min(1, __("validation.countries_required")).optional(),
-  currencies: z.array(z.number()).min(1, __("validation.currencies_required")).optional(),
-  paymentSystemTypes: z.array(z.number()).min(1, __("validation.payment_system_types_required")).optional(),
+  name: z.string().min(1, __("validation.name_required")).max(255, __("validation.name_too_long")),
+  countries: z.array(z.number()).min(1, __("validation.countries_required")),
+  currencies: z.array(z.number()).min(1, __("validation.currencies_required")),
+  paymentSystemTypes: z.array(z.number()).min(1, __("validation.payment_system_types_required")),
   trafficVolumeMin: z.number().min(0, __("validation.traffic_volume_min_invalid")).optional(),
   trafficVolumeMax: z.number().min(0, __("validation.traffic_volume_max_invalid")).optional(),
-  paymentMethodId: z.number().min(1, __("validation.payment_method_required")).optional(),
+  paymentMethods: z.array(z.number()).optional(),
   payInMinFee: z.number().min(0, __("validation.payin_min_fee_invalid")).max(100, __("validation.payin_fee_max_invalid")).optional(),
   payInMaxFee: z.number().min(0, __("validation.payin_max_fee_invalid")).max(100, __("validation.payin_fee_max_invalid")).optional(),
   payOutMinFee: z.number().min(0, __("validation.payout_min_fee_invalid")).max(100, __("validation.payout_fee_max_invalid")).optional(),
@@ -261,6 +288,7 @@ export const updateOfferBodySchema = z.object({
   trafficSources: z.array(z.number()).min(1, __("validation.traffic_sources_required")).optional(),
   trafficTypes: z.array(z.number()).min(1, __("validation.traffic_types_required")).optional(),
   connectionTypes: z.array(z.number()).min(1, __("validation.connection_types_required")).optional(),
+  balanceTypes: z.array(z.number()).min(1, __("validation.balance_types_required")).optional(),
   legalPerson: z.boolean().optional(),
   slug: z.string().min(1, __("validation.slug_required")).optional(),
   isActive: z.boolean().optional(),

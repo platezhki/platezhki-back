@@ -317,6 +317,7 @@ export const filterOffersHandler = async (req: Request, res: Response) => {
             message: __('payment_service.retrieved_successfully'),
             data: result.data,
             pagination: result.pagination,
+            totalOffers: result.totalOffers,
             filters: result.filters,
         });
     } catch (error: any) {

@@ -185,18 +185,37 @@ export const touchUserActivity = async (cookieHash: string, userId?: number) => 
     }
 };
 
-// Count unique active user activities in the last `minutes` minutes
-export const countActiveUsers = async (minutes = 5) => {
-    try {
-        const p: any = prisma as any;
-        const since = new Date(Date.now() - minutes * 60 * 1000);
-        // Count distinct cookieHash where lastSeenAt >= since
-        const count = await p.userActivity.count({ where: { lastSeenAt: { gte: since } } });
-        return count;
-    } catch (error) {
-        console.error('countActiveUsers error', error);
-        return 0;
-    }
+// // Count unique active user activities in the last `minutes` minutes
+// export const countActiveUsers = async (minutes = 5) => {
+//     try {
+//         const p: any = prisma as any;
+//         const since = new Date(Date.now() - minutes * 60 * 1000);
+//         // Count distinct cookieHash where lastSeenAt >= since
+//         const count = await p.userActivity.count({ where: { lastSeenAt: { gte: since } } });
+//         return count;
+//     } catch (error) {
+//         console.error('countActiveUsers error', error);
+//         return 0;
+//     }
+// };
+
+
+// Count users with MERCHANT role
+export const countActiveUsers = async () => {
+  try {
+    const count = await prisma.user.count({
+      where: {
+        isActive: true,
+        role: {
+          name: { in: ['MERCHANT', 'PAYMENT'] }
+        }
+      }
+    });
+    return count;
+  } catch (error) {
+    console.error('countActiveUsers error', error);
+    return 0;
+  }
 };
 
 export const sendEmailVerificationCode = async (userId: number) => {

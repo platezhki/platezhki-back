@@ -49,7 +49,7 @@ export const createOffer = async (data: any) => {
         const countries = toIdArray(data.countries);
         const currencies = toIdArray(data.currencies);
         const paymentSystemTypes = toIdArray(data.paymentSystemTypes ?? data.paymentSystemTypeId);
-        const paymentMethodIds = toIdArray(data.paymentMethodId);
+        const paymentMethodIds = toIdArray(data.paymentMethods ?? data.paymentMethodId);
         const trafficSources = toIdArray(data.trafficSources);
         const trafficTypes = toIdArray(data.trafficTypes);
         const connectionTypes = toIdArray(data.connectionTypes);
@@ -1601,6 +1601,60 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
         // Get total count of payment services (DB-side filtered)
         const total = await prisma.paymentService.count({ where });
 
+        // Build offer where clause for counting total matching offers
+        const offerWhere: any = { isActive: true };
+
+        // Apply offer-specific filters
+        if (offerConditions.length > 0) {
+            offerWhere.AND = offerConditions;
+        }
+
+        // Apply payment service filters to offers via their payment service relations
+        if (filters?.countries && filters.countries.length > 0) {
+            offerWhere.paymentServices = {
+                some: {
+                    paymentService: {
+                        isActive: true,
+                        countries: {
+                            some: {
+                                countryId: { in: filters.countries }
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        // Apply search query to offers
+        if (filters?.q) {
+            offerWhere.OR = [
+                { name: { contains: filters.q, mode: 'insensitive' } },
+                {
+                    paymentServices: {
+                        some: {
+                            paymentService: {
+                                name: { contains: filters.q, mode: 'insensitive' }
+                            }
+                        }
+                    }
+                }
+            ];
+        }
+
+        // Apply ids filter to offers
+        if (filters?.ids && filters.ids.length > 0) {
+            offerWhere.paymentServices = {
+                some: {
+                    paymentService: {
+                        id: { in: filters.ids }
+                    }
+                }
+            };
+        }
+
+        // Get total count of offers matching the filters
+        const totalOffers = await prisma.offer.count({ where: offerWhere });
+
         // Build orderBy clause for sorting (support sorting by owner average rating via nested relation)
         let orderBy: any;
         const sortColumn = (filters?.sortColumn || 'id') as any;
@@ -1749,6 +1803,7 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
         return {
             data: transformedPaymentServices.filter((s: any) => s.offers && s.offers.length > 0),
             pagination: { page, limit, total, pages },
+            totalOffers,
             filters: Object.keys(filters || {}).filter(key => filters![key as keyof typeof filters] !== undefined)
         };
     } catch (error) {

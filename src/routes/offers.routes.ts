@@ -21,7 +21,8 @@ import {
     getOfferSchema,
     getOfferBySlugSchema,
     filterOffersSchema,
-    createOfferSchema
+    createOfferSchema,
+    updateOfferSchema
 } from "../schemas/offers.schema";
 import { validateQuery, validateParams, validateBody } from "../middlewares/validate";
 import { authenticateToken } from "../middlewares/auth";
@@ -39,7 +40,7 @@ router.get("/my", authenticateToken, validateQuery(getUserOffersSchema.shape.que
 router.put("/", authenticateToken, validateBody(createOfferSchema.shape.body), createOfferHandler);
 router.post("/:id/activate", authenticateToken, validateParams(activateOfferSchema.shape.params), activateOfferHandler);
 router.post("/:id/deactivate", authenticateToken, validateParams(deactivateOfferSchema.shape.params), deactivateOfferHandler);
-router.patch("/:id", authenticateToken, updateOfferHandler);
+router.patch("/:id", authenticateToken, validateParams(updateOfferSchema.shape.params), validateBody(updateOfferSchema.shape.body), updateOfferHandler);
 router.delete("/:id", authenticateToken, validateParams(deleteOfferSchema.shape.params), deleteOfferHandler);
 
 // Public routes that need to be after specific routes to avoid conflicts

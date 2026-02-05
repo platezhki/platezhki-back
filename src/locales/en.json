@@ -43,10 +43,14 @@
     "username_too_short": "Username must be at least 3 characters",
     "name_required": "Name is required",
     "name_too_long": "Name must not exceed 255 characters",
+    "description_required": "Description is required",
+    "service_url_required": "Service URL is required",
+    "invalid_service_url": "Invalid service URL",
+    "established_at_required": "Establishment date is required",
     "logo_file_required": "Logo file is required",
     "logo_filename_required": "Logo filename is required",
     "description_too_long": "Description must not exceed 255 characters",
-    "invalid_date_format": "Date must be in format DD.MM.YYYY",
+    "invalid_date_format": "Date must be in format DD.MM.YYYY or YYYY",
     "contacts_unique": "Contacts must be unique",
     "payin_methods_required": "At least one pay-in method is required",
     "payout_methods_required": "At least one pay-out method is required",
@@ -230,5 +234,9 @@
     "get_failed": "Failed to retrieve replies",
     "updated": "Reply updated successfully",
     "deleted": "Reply deleted successfully"
+  },
+  "site_settings": {
+    "retrieved_successfully": "Site settings retrieved successfully",
+    "updated_successfully": "Site settings updated successfully"
   }
 }

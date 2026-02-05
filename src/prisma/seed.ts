@@ -63,6 +63,15 @@ async function main() {
       { name: 'Uzbekistan', flagUrl: 'flags/uz.png' },
       { name: 'Ukraine', flagUrl: 'flags/ua.png' },
       { name: 'Europe', flagUrl: 'flags/eu.png' },
+      { name: 'Venezuela', flagUrl: 'flags/ve.png' },
+      { name: 'Bolivia', flagUrl: 'flags/bo.png' },
+      { name: 'Peru', flagUrl: 'flags/pe.png' },
+      { name: 'Chile', flagUrl: 'flags/cl.png' },
+      { name: 'Paraguay', flagUrl: 'flags/py.png' },
+      { name: 'Costa Rica', flagUrl: 'flags/cr.png' },
+      { name: 'Nicaragua', flagUrl: 'flags/ni.png' },
+      { name: 'Dominican Republic', flagUrl: 'flags/do.png' },
+
     ],
     skipDuplicates: true,
   });
@@ -75,6 +84,14 @@ async function main() {
       { name: 'UZS' },
       { name: 'USD' },
       { name: 'EUR' },
+      { name: 'VES' },
+      { name: 'BOB' },
+      { name: 'PEN' },
+      { name: 'CLP' },
+      { name: 'PYG' },
+      { name: 'CRC' },
+      { name: 'NIO' },
+      { name: 'DOP' },
     ],
     skipDuplicates: true,
   });
@@ -302,39 +319,39 @@ async function main() {
     ];
 
     // Create PaymentServices with relations
-    for (const serviceData of samplePaymentServices) {
-      const { countries, currencies, paymentSystemTypes, payInMethods, payOutMethods, languageSupport, ...service } = serviceData;
-
-      const createdService = await prisma.paymentService.create({
-        data: {
-          ...service,
-          countries: {
-            create: countries.map(countryId => ({ countryId }))
-          },
-          currencies: {
-            create: currencies.map(currencyId => ({ currencyId }))
-          },
-          paymentSystemTypes: {
-            create: paymentSystemTypes.map(paymentSystemTypeId => ({ paymentSystemTypeId }))
-          },
-          payInMethods: {
-            create: [
-              ...payInMethods.map(paymentMethodId => ({
-                paymentMethodId,
-                methodType: 'payin'
-              })),
-              ...payOutMethods.map(paymentMethodId => ({
-                paymentMethodId,
-                methodType: 'payout'
-              }))
-            ]
-          },
-          supportServiceLanguages: {
-            create: languageSupport.map(languageId => ({ languageId }))
-          }
-        }
-      });
-    }
+    // for (const serviceData of samplePaymentServices) {
+    //   const { countries, currencies, paymentSystemTypes, payInMethods, payOutMethods, languageSupport, ...service } = serviceData;
+    //
+    //   const createdService = await prisma.paymentService.create({
+    //     data: {
+    //       ...service,
+    //       countries: {
+    //         create: countries.map(countryId => ({ countryId }))
+    //       },
+    //       currencies: {
+    //         create: currencies.map(currencyId => ({ currencyId }))
+    //       },
+    //       paymentSystemTypes: {
+    //         create: paymentSystemTypes.map(paymentSystemTypeId => ({ paymentSystemTypeId }))
+    //       },
+    //       payInMethods: {
+    //         create: [
+    //           ...payInMethods.map(paymentMethodId => ({
+    //             paymentMethodId,
+    //             methodType: 'payin'
+    //           })),
+    //           ...payOutMethods.map(paymentMethodId => ({
+    //             paymentMethodId,
+    //             methodType: 'payout'
+    //           }))
+    //         ]
+    //       },
+    //       supportServiceLanguages: {
+    //         create: languageSupport.map(languageId => ({ languageId }))
+    //       }
+    //     }
+    //   });
+    // }
   }
 }
 

@@ -16,15 +16,16 @@ import {
     activatePaymentServiceSchema,
     deactivatePaymentServiceSchema,
     deletePaymentServiceSchema,
-    getPaymentServiceBySlugSchema
+    getPaymentServiceBySlugSchema,
+    createPaymentServiceBodySchema
 } from "../schemas/payment-services.schema";
-import { validateQuery, validateParams } from "../middlewares/validate";
+import { validateQuery, validateParams, validateBody } from "../middlewares/validate";
 import { authenticateToken } from "../middlewares/auth";
 
 const router = Router();
 
 router.get("/", authenticateToken, validateQuery(getPaymentServicesSchema.shape.query), getPaymentServicesHandler);
-router.put("/", authenticateToken, createPaymentServiceHandler);
+router.put("/", authenticateToken, validateBody(createPaymentServiceBodySchema), createPaymentServiceHandler);
 router.get("/my", authenticateToken, getUserPaymentServiceHandler);
 router.get("/slug/:slug", validateParams(getPaymentServiceBySlugSchema.shape.params), getPaymentServiceBySlugHandler);
 router.get("/:id", authenticateToken, validateParams(getPaymentServiceSchema.shape.params), getPaymentServiceByIdHandler);

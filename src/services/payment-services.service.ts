@@ -118,9 +118,16 @@ export const createPaymentService = async (data: any, userRoleId?: number, userI
         // Generate slug from name
         const slug = await generateSlugForEntity(data.name, 'PaymentService');
 
-        // Parse establishedAt date
-        const [day, month, year] = data.establishedAt.split('.');
-        const establishedAt = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        // Parse establishedAt date (supports YYYY or DD.MM.YYYY format)
+        let establishedAt: Date;
+        if (/^\d{4}$/.test(data.establishedAt)) {
+            // Year only format (YYYY) - set to January 1st of that year
+            establishedAt = new Date(parseInt(data.establishedAt), 0, 1);
+        } else {
+            // Full date format (DD.MM.YYYY)
+            const [day, month, year] = data.establishedAt.split('.');
+            establishedAt = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        }
 
         // Check if user already has a payment service (by ownerId)
         const existingByOwner = await prisma.paymentService.findFirst({
@@ -578,11 +585,17 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
             slug = data.slug;
         }
 
-        // Parse establishedAt date if provided
+        // Parse establishedAt date if provided (supports YYYY or DD.MM.YYYY format)
         let establishedAt = existingService.establishedAt;
         if (data.establishedAt) {
-            const [day, month, year] = data.establishedAt.split('.');
-            establishedAt = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            if (/^\d{4}$/.test(data.establishedAt)) {
+                // Year only format (YYYY) - set to January 1st of that year
+                establishedAt = new Date(parseInt(data.establishedAt), 0, 1);
+            } else {
+                // Full date format (DD.MM.YYYY)
+                const [day, month, year] = data.establishedAt.split('.');
+                establishedAt = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            }
         }
 
         // Check for name conflicts if name is being updated

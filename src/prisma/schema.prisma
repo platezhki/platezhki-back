@@ -492,3 +492,12 @@ model PasswordReset {
   @@index([email])
   @@map("password_resets")
 }
+
+model SiteSettings {
+  id              Int      @id @default(autoincrement())
+  maintenanceMode Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("site_settings")
+}
