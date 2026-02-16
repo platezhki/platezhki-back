@@ -36,6 +36,7 @@ export const createPaymentServiceSchema = z.object({
     z.string()
   ])).optional(),
   isActive: z.boolean().optional().default(true),
+  isPromoted: z.boolean().optional().default(false),
 });
 
 export const getPaymentServicesSchema = z.object({
@@ -50,6 +51,8 @@ export const getPaymentServicesSchema = z.object({
     // Sorting
     sortColumn: z.enum(['id', 'createdAt', 'name', 'averageRating']).optional().default('id'),
     order: z.enum(['ASC', 'DESC']).optional().default('DESC'),
+    // Whether to show promoted items first when no conflicting filters applied
+    promotedFirst: z.boolean().optional().default(true),
   }).optional(),
 });
 
@@ -100,6 +103,8 @@ export const updatePaymentServiceSchema = z.object({
 
     slug: z.string().min(1, __("validation.slug_required")).optional(),
     isActive: z.boolean().optional(),
+    // Promotion field
+    isPromoted: z.boolean().optional(),
   }),
   params: z.object({
     id: z.string().min(1, __("validation.id_required")),
@@ -137,7 +142,7 @@ export const createPaymentServiceBodySchema = z.object({
     file: z.string().min(1, __("validation.logo_file_required")),
     fileName: z.string().min(1, __("validation.logo_filename_required"))
   }).optional(),
-  description: z.string({error: __("validation.description_required")}).min(1, __("validation.description_required")).max(255, __("validation.description_too_long")),
+  description: z.string({error: __("validation.description_required")} ).min(1, __("validation.description_required")).max(255, __("validation.description_too_long")),
   serviceUrl: z.string({error: __("validation.service_url_required")}).min(1, __("validation.service_url_required")).optional(),
   establishedAt: z.string({error: __("validation.established_at_required")}).min(1, __("validation.established_at_required")).regex(/^(\d{4}|\d{2}\.\d{2}\.\d{4})$/, __("validation.invalid_date_format")),
   contacts: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, __("validation.contacts_unique")).optional(),
@@ -157,7 +162,7 @@ export const createPaymentServiceBodySchema = z.object({
     }),
     z.string()
   ])).optional(),
-  cabinetExampleLink: z.string({error: __("validation.invalid_cabinet_link")}).nullable().optional(),
+  cabinetExampleLink: z.string({error: __("validation.invalid_cabinet_link")} ).nullable().optional(),
   cabinetExampleImageUrls: z.array(z.union([
     z.object({
       file: z.string().min(1, __("validation.image_file_required")),
@@ -166,6 +171,8 @@ export const createPaymentServiceBodySchema = z.object({
     z.string()
   ])).optional(),
   isActive: z.boolean().optional().default(true),
+  // Promotion field
+  isPromoted: z.boolean().optional().default(false),
 });
 
 export const updatePaymentServiceBodySchema = z.object({
@@ -206,4 +213,6 @@ export const updatePaymentServiceBodySchema = z.object({
   ])).optional(),
   slug: z.string().min(1, __("validation.slug_required")).optional(),
   isActive: z.boolean().optional(),
+  // Promotion field
+  isPromoted: z.boolean().optional(),
 });

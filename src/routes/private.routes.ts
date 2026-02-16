@@ -7,6 +7,7 @@ import settingsRoutes from "./settings.routes";
 import { authenticateToken } from "../middlewares/auth";
 import rolesRoutes from "./roles.routes";
 import offersRoutes from "./offers.routes";
+import favoritesRoutes from "./favorites.routes";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/payment-services", paymentServicesRoutes);
 router.use("/settings", settingsRoutes);
 router.use("/roles", rolesRoutes);
 router.use("/offers", offersRoutes);
+router.use("/favorites", favoritesRoutes);
 
 export default router;

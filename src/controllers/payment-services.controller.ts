@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createPaymentService, getPaymentServices, getPaymentServiceById, updatePaymentService, activatePaymentService, deactivatePaymentService, deletePaymentService, getUserPaymentService, getPaymentServiceBySlug } from "../services/payment-services.service";
+import { createPaymentService, getPaymentServices, getPaymentServiceById, updatePaymentService, activatePaymentService, deactivatePaymentService, deletePaymentService, getUserPaymentService, getPaymentServiceBySlug, setPromotion, clearPromotion } from "../services/payment-services.service";
 import { __ } from "../utils/i18n";
 import { createPaymentServiceSchema, getPaymentServicesSchema, updatePaymentServiceSchema, activatePaymentServiceSchema, deactivatePaymentServiceSchema, deletePaymentServiceSchema, getPaymentServiceBySlugSchema } from "../schemas/payment-services.schema";
 
@@ -19,12 +19,12 @@ export const createPaymentServiceHandler = async (req: AuthenticatedRequest, res
             ownerId: req.user?.userId || 1, // Default to user ID 1 if not authenticated
             userId: req.user?.userId || 1, // Default to user ID 1 if not authenticated
         };
-        
+
         const paymentService = await createPaymentService(dataWithUser, req.user?.roleId, req.user?.userId);
-        
+
         // Check if this was an update (existing service) or creation (new service)
         const isUpdate = req.method === 'PUT' && paymentService.id;
-        
+
         res.status(isUpdate ? 200 : 201).json({
             success: true,
             message: isUpdate ? __('payment_service.updated_successfully') : __('payment_service.created_successfully'),
@@ -43,7 +43,7 @@ export const getPaymentServicesHandler = async (req: Request, res: Response) => 
         // Use validated query data from middleware
         const queryData = (req as any).validatedQuery || req.query;
         const result = await getPaymentServices(queryData);
-        
+
         res.status(200).json({
             success: true,
             message: __('payment_service.retrieved_successfully'),
@@ -63,7 +63,7 @@ export const getPaymentServiceByIdHandler = async (req: Request, res: Response) 
         const params = (req as any).validatedParams || req.params;
         const { id } = params;
         const paymentService = await getPaymentServiceById(Number(id));
-        
+
         res.status(200).json({
             success: true,
             message: __('payment_service.retrieved_successfully'),
@@ -85,9 +85,9 @@ export const updatePaymentServiceHandler = async (req: AuthenticatedRequest, res
             body: req.body,
             params: params
         });
-        
+
         const paymentService = await updatePaymentService(Number(validatedData.params.id), validatedData.body, req.user?.roleId, req.user?.userId);
-        
+
         res.status(200).json({
             success: true,
             message: __('payment_service.updated_successfully'),
@@ -108,16 +108,16 @@ export const activatePaymentServiceHandler = async (req: AuthenticatedRequest, r
         const validatedData = activatePaymentServiceSchema.parse({
             params: params
         });
-        
+
         const paymentService = await activatePaymentService(Number(validatedData.params.id), req.user?.roleId, req.user?.userId);
-        
+
         res.status(200).json({
             success: true,
             message: __('payment_service.activated_successfully'),
             data: paymentService,
         });
     } catch (error: any) {
-        const statusCode = error.message.includes('not found') ? 404 : 
+        const statusCode = error.message.includes('not found') ? 404 :
                           error.message.includes('already active') ? 400 : 500;
         res.status(statusCode).json({
             success: false,
@@ -133,16 +133,16 @@ export const deactivatePaymentServiceHandler = async (req: AuthenticatedRequest,
         const validatedData = deactivatePaymentServiceSchema.parse({
             params: params
         });
-        
+
         const paymentService = await deactivatePaymentService(Number(validatedData.params.id), req.user?.roleId, req.user?.userId);
-        
+
         res.status(200).json({
             success: true,
             message: __('payment_service.deactivated_successfully'),
             data: paymentService,
         });
     } catch (error: any) {
-        const statusCode = error.message.includes('not found') ? 404 : 
+        const statusCode = error.message.includes('not found') ? 404 :
                           error.message.includes('already inactive') ? 400 : 500;
         res.status(statusCode).json({
             success: false,
@@ -158,9 +158,9 @@ export const deletePaymentServiceHandler = async (req: AuthenticatedRequest, res
         const validatedData = deletePaymentServiceSchema.parse({
             params: params
         });
-        
+
         const result = await deletePaymentService(Number(validatedData.params.id), req.user?.roleId, req.user?.userId);
-        
+
         res.status(200).json({
             success: true,
             message: result.message,
@@ -183,16 +183,16 @@ export const getUserPaymentServiceHandler = async (req: AuthenticatedRequest, re
                 message: __('auth.unauthorized'),
             });
         }
-        
+
         const paymentService = await getUserPaymentService(ownerId);
-        
+
         if (!paymentService) {
             return res.status(404).json({
                 success: false,
                 message: __('payment_service.not_found'),
             });
         }
-        
+
         res.status(200).json({
             success: true,
             message: __('payment_service.retrieved_successfully'),
@@ -213,9 +213,9 @@ export const getPaymentServiceBySlugHandler = async (req: Request, res: Response
         const validatedData = getPaymentServiceBySlugSchema.parse({
             params: params
         });
-        
+
         const paymentService = await getPaymentServiceBySlug(validatedData.params.slug);
-        
+
         res.status(200).json({
             success: true,
             message: __('payment_service.retrieved_successfully'),
@@ -227,5 +227,48 @@ export const getPaymentServiceBySlugHandler = async (req: Request, res: Response
             success: false,
             message: error.message,
         });
+    }
+};
+
+export const setPaymentServicePromotionHandler = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const params = (req as any).validatedParams || req.params;
+        const body = (req as any).validatedBody || req.body;
+        const id = Number(params.id);
+        // Only authenticated users can set promotion; further permission checked in service
+        const promoted = await setPromotion(id, {
+            isPromoted: body.isPromoted
+        }, req.user?.roleId, req.user?.userId);
+
+        res.status(200).json({ success: true, message: __('payment_service.promotion_set_successfully') || 'Promotion set', data: promoted });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const clearPaymentServicePromotionHandler = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const params = (req as any).validatedParams || req.params;
+        const id = Number(params.id);
+        const cleared = await clearPromotion(id, req.user?.roleId, req.user?.userId);
+        res.status(200).json({ success: true, message: __('payment_service.promotion_cleared_successfully') || 'Promotion cleared', data: cleared });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const adminGetPaymentServiceByUserIdHandler = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const userId = Number(req.params.userId);
+        if (!userId || isNaN(userId)) {
+            return res.status(400).json({ success: false, message: "Некорректный userId" });
+        }
+        const service = await getUserPaymentService(userId);
+        if (!service) {
+            return res.status(404).json({ success: false, message: "Платёжный сервис не найден" });
+        }
+        res.status(200).json({ success: true, data: service });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
     }
 };

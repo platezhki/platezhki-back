@@ -150,7 +150,16 @@ export const updateUser = async (userId: number, updateData: {
 
         if (Object.keys(data).length === 0) {
             // Нет валидных изменений
-            return existingUser;
+            return { user: existingUser };
+        }
+
+        const isPasswordChanged = !!data.password;
+
+        // If password is being changed, invalidate all existing tokens
+        if (isPasswordChanged) {
+            await prisma.authToken.deleteMany({
+                where: { userId: userId }
+            });
         }
 
         const updatedUser = await prisma.user.update({
@@ -160,7 +169,34 @@ export const updateUser = async (userId: number, updateData: {
         });
 
         const { password: _, ...userWithoutPassword } = updatedUser as any;
-        return userWithoutPassword;
+
+        // If password was changed, generate new tokens
+        if (isPasswordChanged) {
+            const { accessToken, refreshToken } = generateTokenPair({
+                id: updatedUser.id,
+                username: updatedUser.username,
+            });
+
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7);
+
+            await prisma.authToken.create({
+                data: {
+                    userId: updatedUser.id,
+                    token: accessToken,
+                    refreshToken,
+                    expiresAt,
+                },
+            });
+
+            return {
+                user: userWithoutPassword,
+                accessToken,
+                refreshToken,
+            };
+        }
+
+        return { user: userWithoutPassword };
     } catch (error) {
         throw error;
     }
@@ -383,7 +419,19 @@ export const getUsersAdmin = async (query: {
       orderBy,
       skip,
       take: limit,
-      include: { role: true },
+      include: {
+        role: true,
+        paymentServices: {
+          include: {
+            countries: { include: { country: true } },
+            currencies: { include: { currency: true } },
+            paymentSystemTypes: { include: { paymentSystemType: true } },
+            payInMethods: { where: { methodType: 'payIn' }, include: { paymentMethod: true } },
+            payOutMethods: { where: { methodType: 'payOut' }, include: { paymentMethod: true } },
+            supportServiceLanguages: { include: { language: true } }
+          }
+        }
+      },
     }),
   ]);
 

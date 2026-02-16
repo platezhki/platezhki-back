@@ -8,7 +8,10 @@ import {
     deactivatePaymentServiceHandler,
     deletePaymentServiceHandler,
     getUserPaymentServiceHandler,
-    getPaymentServiceBySlugHandler
+    getPaymentServiceBySlugHandler,
+    setPaymentServicePromotionHandler,
+    clearPaymentServicePromotionHandler,
+    adminGetPaymentServiceByUserIdHandler
 } from "../controllers/payment-services.controller";
 import {
     getPaymentServicesSchema,
@@ -17,10 +20,12 @@ import {
     deactivatePaymentServiceSchema,
     deletePaymentServiceSchema,
     getPaymentServiceBySlugSchema,
-    createPaymentServiceBodySchema
+    createPaymentServiceBodySchema,
+    updatePaymentServiceBodySchema
 } from "../schemas/payment-services.schema";
 import { validateQuery, validateParams, validateBody } from "../middlewares/validate";
 import { authenticateToken } from "../middlewares/auth";
+import {requireAdmin, requireAdminOrModerator} from "../middlewares/authorize-roles";
 
 const router = Router();
 
@@ -33,5 +38,26 @@ router.patch("/:id", authenticateToken, updatePaymentServiceHandler);
 router.delete("/:id", authenticateToken, validateParams(deletePaymentServiceSchema.shape.params), deletePaymentServiceHandler);
 router.post("/:id/activate", authenticateToken, validateParams(activatePaymentServiceSchema.shape.params), activatePaymentServiceHandler);
 router.post("/:id/deactivate", authenticateToken, validateParams(deactivatePaymentServiceSchema.shape.params), deactivatePaymentServiceHandler);
+router.put(
+  "/:id/promotion",
+  authenticateToken,
+  requireAdminOrModerator(),
+  validateParams(getPaymentServiceSchema.shape.params),
+  validateBody(updatePaymentServiceBodySchema),
+  setPaymentServicePromotionHandler
+);
+router.delete(
+  "/:id/promotion",
+  authenticateToken,
+  requireAdminOrModerator(),
+  validateParams(getPaymentServiceSchema.shape.params),
+  clearPaymentServicePromotionHandler
+);
+router.get(
+  "/admin/user/:userId",
+  authenticateToken,
+  requireAdminOrModerator(),
+  adminGetPaymentServiceByUserIdHandler
+);
 
 export default router;

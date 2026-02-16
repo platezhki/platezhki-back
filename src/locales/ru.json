@@ -211,5 +211,12 @@
   "site_settings": {
     "retrieved_successfully": "Настройки сайта успешно получены",
     "updated_successfully": "Настройки сайта успешно обновлены"
+  },
+  "favorites": {
+    "added_successfully": "Платежная система добавлена в избранное",
+    "removed_successfully": "Платежная система удалена из избранного",
+    "already_added": "Платежная система уже в избранном",
+    "not_found": "Платежная система не найдена в избранном",
+    "retrieved_successfully": "Избранное успешно получено"
   }
 }

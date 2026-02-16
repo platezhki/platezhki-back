@@ -18,6 +18,31 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         }
 
         const decoded = verifyAccessToken(token);
+
+        // Check if token exists in database
+        const authToken = await prisma.authToken.findFirst({
+            where: { token: token }
+        });
+
+        if (!authToken) {
+            return res.status(401).json({
+                success: false,
+                message: __('auth.unauthorized')
+            });
+        }
+
+        // Check if token is expired
+        if (authToken.expiresAt < new Date()) {
+            // Delete expired token
+            await prisma.authToken.delete({
+                where: { id: authToken.id }
+            });
+            return res.status(401).json({
+                success: false,
+                message: __('auth.unauthorized')
+            });
+        }
+
         const user = await prisma.user.findUnique({
             where: { id: decoded.userId },
             select: { id: true, roleId: true, isActive: true }

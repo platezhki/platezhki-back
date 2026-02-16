@@ -363,6 +363,8 @@ export const resetPasswordWithCode = async (email: string, code: string, newPass
   await prisma.$transaction([
     (prisma as any).passwordReset.update({ where: { id: record.id }, data: { isUsed: true } }),
     prisma.user.update({ where: { id: user.id }, data: { password: hashed } }),
+    // Invalidate all existing tokens for this user
+    prisma.authToken.deleteMany({ where: { userId: user.id } }),
   ]);
 
   return { message: __('auth.password_reset_success') };

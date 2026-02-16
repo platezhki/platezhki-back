@@ -132,8 +132,26 @@ export const updateUserHandler = async (req: Request, res: Response) => {
     const userId = (req as any).user?.userId;
     if (!userId) return res.status(401).json({ success: false, message: __('general.unauthorized') });
     const { username, password } = req.body;
-    const updatedUser = await updateUser(Number(userId), { username, password });
-    res.status(200).json({ success: true, message: __('user.user_updated_successfully'), data: updatedUser });
+    const result = await updateUser(Number(userId), { username, password });
+
+    // Check if tokens were returned (password was changed)
+    if ('accessToken' in result && 'refreshToken' in result) {
+      res.status(200).json({
+        success: true,
+        message: __('user.user_updated_successfully'),
+        data: {
+          user: result.user,
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+        }
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: __('user.user_updated_successfully'),
+        data: result
+      });
+    }
   } catch (error: any) {
     const msg = error?.message;
     if (msg === __('user.user_not_found')) {

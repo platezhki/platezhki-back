@@ -238,5 +238,12 @@
   "site_settings": {
     "retrieved_successfully": "Site settings retrieved successfully",
     "updated_successfully": "Site settings updated successfully"
+  },
+  "favorites": {
+    "added_successfully": "Payment service added to favorites",
+    "removed_successfully": "Payment service removed from favorites",
+    "already_added": "Payment service is already in favorites",
+    "not_found": "Payment service not found in favorites",
+    "retrieved_successfully": "Favorites retrieved successfully"
   }
 }

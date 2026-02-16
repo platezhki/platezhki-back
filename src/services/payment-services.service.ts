@@ -221,6 +221,8 @@ export const createPaymentService = async (data: any, userRoleId?: number, userI
                 logoUrl,
                 slug,
                 isActive: data.isActive ?? true,
+                // Promotion field
+                isPromoted: data.isPromoted ?? false,
                 ownerId: data.ownerId,
                 userId: data.userId,
                 // Create relations
@@ -292,6 +294,45 @@ export const createPaymentService = async (data: any, userRoleId?: number, userI
     }
 };
 
+// Set promotion on an existing payment service
+export const setPromotion = async (id: number, payload: { isPromoted?: boolean }, userRoleId?: number, userId?: number) => {
+    try {
+        const existingService = await prisma.paymentService.findUnique({ where: { id } });
+        if (!existingService) throw new Error(__('payment_service.not_found'));
+        // Permissions: reuse existing update permission logic (admins can update any)
+        if (userRoleId && userRoleId > 2 && existingService.ownerId !== userId) {
+            throw new Error(__('payment_service.insufficient_permissions_to_update'));
+        }
+
+        const updated = await prisma.paymentService.update({
+            where: { id },
+            data: {
+                isPromoted: payload.isPromoted ?? true
+            }
+        });
+
+        return transformPaymentService(updated);
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Clear promotion
+export const clearPromotion = async (id: number, userRoleId?: number, userId?: number) => {
+    try {
+        const existingService = await prisma.paymentService.findUnique({ where: { id } });
+        if (!existingService) throw new Error(__('payment_service.not_found'));
+        if (userRoleId && userRoleId > 2 && existingService.ownerId !== userId) {
+            throw new Error(__('payment_service.insufficient_permissions_to_update'));
+        }
+
+        const updated = await prisma.paymentService.update({ where: { id }, data: { isPromoted: false } });
+        return transformPaymentService(updated);
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const getPaymentServices = async (filters?: z.infer<typeof getPaymentServicesSchema>['query']) => {
     try {
         const page = Number(filters?.page) || 1;
@@ -344,6 +385,40 @@ export const getPaymentServices = async (filters?: z.infer<typeof getPaymentServ
                     }
                 }
             ];
+        }
+
+        // Если включен promotedFirst и нет конфликтующих фильтров, сначала вернем промо-услуги
+        const promotedFirst = filters?.promotedFirst === undefined ? true : !!filters?.promotedFirst;
+
+        const hasConflictFilters = Object.keys(filters || {}).some(k => !excludeFilters.includes(k) && !['promotedFirst', 'sortColumn', 'order'].includes(k));
+
+        if (promotedFirst && !hasConflictFilters) {
+            // Select promoted first: получим сначала промо, затем дополним обычными
+            const promotedWhere = { ...where, isPromoted: true };
+
+            const promoted = await prisma.paymentService.findMany({ where: promotedWhere, orderBy: { id: 'desc' }, include: { user: { select: { id: true, averageRating: true, ratingsCount: true } } } });
+
+            // If promoted covers enough items for this page, slice accordingly
+            const allPromotedIds = promoted.map(p => p.id);
+            const promotedPage = promoted.slice(skip, skip + limit);
+            if (promotedPage.length === limit) {
+                const cleaned = promotedPage.map(p => transformPaymentService(p));
+                const pages = Math.ceil(promoted.length / limit);
+                return { data: cleaned.map((s:any) => ({ ...s, ownerAverageRating: s.user ? { average: s.user.averageRating ?? 0, count: s.user.ratingsCount ?? 0 } : { average: 0, count: 0 } })), pagination: { page, limit, total: promoted.length, pages }, filters: Object.keys(filters || {}).filter(key => filters![key as keyof typeof filters] !== undefined && !excludeFilters.includes(key)) };
+            }
+
+            // Need to fetch non-promoted to fill the rest
+            const remainingToTake = limit - Math.min(limit, promotedPage.length);
+            const nonPromotedWhere = { ...where, NOT: { id: { in: allPromotedIds } } };
+            const nonPromoted = await prisma.paymentService.findMany({ where: nonPromotedWhere, skip: Math.max(0, skip - promoted.length), take: remainingToTake, orderBy: { [((filters as any)?.sortColumn || 'id')]: (((filters as any)?.order || 'DESC') as any).toLowerCase() }, include: { user: { select: { id: true, averageRating: true, ratingsCount: true } } } as any });
+
+            const combined = [...promotedPage, ...nonPromoted];
+            const total = promoted.length + await prisma.paymentService.count({ where: nonPromotedWhere });
+            const pages = Math.ceil(total / limit);
+            const cleaned = combined.map(s => transformPaymentService(s));
+            const servicesWithRatings = cleaned.map((s: any) => ({ ...s, ownerAverageRating: s.user ? { average: s.user.averageRating ?? 0, count: s.user.ratingsCount ?? 0 } : { average: 0, count: 0 } }));
+
+            return { data: servicesWithRatings, pagination: { page, limit, total, pages }, filters: Object.keys(filters || {}).filter(key => filters![key as keyof typeof filters] !== undefined && !excludeFilters.includes(key)) };
         }
 
         if (filters?.q) {
@@ -644,6 +719,12 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
             }
         }
 
+        // Only admin/super_admin can update promotion fields
+        let promoFields: any = {};
+        if (userRoleId && userRoleId <= 2) {
+            if (typeof data.isPromoted !== 'undefined') promoFields.isPromoted = data.isPromoted;
+        }
+
         // Update payment service
         const updatedService = await prisma.paymentService.update({
             where: { id },
@@ -661,6 +742,7 @@ export const updatePaymentService = async (id: number, data: any, userRoleId?: n
                 logoUrl,
                 slug,
                 isActive: data.isActive ?? existingService.isActive,
+                ...promoFields,
             },
             include: {
                 countries: {

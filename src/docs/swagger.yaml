@@ -134,6 +134,10 @@ components:
         isActive:
           type: boolean
           example: true
+        isPromoted:
+          type: boolean
+          description: Whether the payment service is promoted
+          example: false
         createdAt:
           type: string
           format: date-time
@@ -774,6 +778,38 @@ components:
           format: date-time
           example: "2024-01-01T00:00:00.000Z"
 
+    Favorite:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 10
+        paymentServiceId:
+          type: integer
+          example: 5
+        paymentService:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 5
+            name:
+              type: string
+              example: "QIWI Wallet"
+            slug:
+              type: string
+              example: "qiwi-wallet"
+            logoUrl:
+              type: string
+              example: "/uploads/logos/qiwi-logo.png"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00.000Z"
+
     EmailSendCodeRequest:
       type: object
       required: [email]
@@ -1273,12 +1309,33 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/Success'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/User'
+                oneOf:
+                  - allOf:
+                      - $ref: '#/components/schemas/Success'
+                      - type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              user:
+                                $ref: '#/components/schemas/User'
+                              accessToken:
+                                type: string
+                                description: New JWT access token (only when password is changed)
+                                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                              refreshToken:
+                                type: string
+                                description: New JWT refresh token (only when password is changed)
+                                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  - allOf:
+                      - $ref: '#/components/schemas/Success'
+                      - type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              user:
+                                $ref: '#/components/schemas/User'
         '400':
           description: Bad request (username already exists or missing fields)
           content:
@@ -1972,6 +2029,133 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /payment-services/{id}/promotion:
+    put:
+      summary: Set payment service promotion
+      tags: [Payment Services]
+      description: Sets promotion status for a payment service (requires authentication).
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Payment service ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isPromoted:
+                  type: boolean
+                  description: Enable promotion status
+                  example: true
+      responses:
+        '200':
+          description: Promotion status set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentService'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Clear payment service promotion
+      tags: [Payment Services]
+      description: Clears promotion status from a payment service (requires authentication).
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Payment service ID
+      responses:
+        '200':
+          description: Promotion status cleared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentService'
+        '404':
+          description: Payment service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /payment-services/admin/user/{userId}:
+    get:
+      summary: Admin - Get payment service by user ID
+      tags: [Payment Services]
+      description: Get payment service by user ID. Available only for admin and super-admin roles.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '200':
+          description: Payment service found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentService'
+        '400':
+          description: Invalid userId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (admin only)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /offers:
     get:
       summary: Get offers
@@ -2049,8 +2233,8 @@ paths:
           name: order
           schema:
             type: string
-            enum: [asc, desc]
-            default: asc
+            enum: [ASC, DESC]
+            default: ASC
       responses:
         '200':
           description: Offers retrieved successfully
@@ -2397,8 +2581,8 @@ paths:
           name: order
           schema:
             type: string
-            enum: [asc, desc]
-            default: asc
+            enum: [ASC, DESC]
+            default: ASC
       responses:
         '200':
           description: User offers retrieved successfully
@@ -3008,8 +3192,8 @@ paths:
           name: order
           schema:
             type: string
-            enum: [asc, desc]
-            default: desc
+            enum: [ASC, DESC]
+            default: DESC
           description: Sort order (ascending or descending)
       security:
         - bearerAuth: []
@@ -3777,6 +3961,264 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden (admin only)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /favorites:
+    get:
+      summary: Get user's favorites with filtering
+      tags: [Favorites]
+      description: Returns user's favorite payment services with optional filtering (requires authentication). Uses the same filtering as /offers/filter.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of items per page
+        - in: query
+          name: countries
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by country IDs
+        - in: query
+          name: currencies
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by currency IDs
+        - in: query
+          name: paymentSystemTypes
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by payment system type IDs
+        - in: query
+          name: payInMethods
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by pay-in method IDs
+        - in: query
+          name: payOutMethods
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by pay-out method IDs
+        - in: query
+          name: trafficSources
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by traffic source IDs
+        - in: query
+          name: trafficTypes
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by traffic type IDs
+        - in: query
+          name: connectionTypes
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by connection type IDs
+        - in: query
+          name: balanceTypes
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Filter by balance type IDs
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Search query for payment service name
+        - in: query
+          name: sort_column
+          schema:
+            type: string
+            enum: [name, createdAt]
+            default: name
+          description: Column to sort by
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: ASC
+          description: Sort order
+      responses:
+        '200':
+          description: Favorites retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Favorites retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentService'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 10
+                      total:
+                        type: integer
+                        example: 25
+                      pages:
+                        type: integer
+                        example: 3
+                  totalOffers:
+                    type: integer
+                    example: 150
+                    description: Total number of offers for favorite payment services
+                  filters:
+                    type: array
+                    items:
+                      type: string
+                    example: ["countries", "currencies"]
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /favorites/{id}:
+    post:
+      summary: Add payment service to favorites
+      tags: [Favorites]
+      description: Add a payment service to user's favorites (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Payment service ID
+      responses:
+        '201':
+          description: Payment service added to favorites successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Added to favorites successfully"
+                  data:
+                    $ref: '#/components/schemas/Favorite'
+        '400':
+          description: Payment service already in favorites
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Remove payment service from favorites
+      tags: [Favorites]
+      description: Remove a payment service from user's favorites (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Payment service ID
+      responses:
+        '200':
+          description: Payment service removed from favorites successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Removed from favorites successfully"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Favorite not found
           content:
             application/json:
               schema:

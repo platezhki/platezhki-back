@@ -310,7 +310,11 @@ export const filterOffersHandler = async (req: Request, res: Response) => {
     try {
         // Use parsed query data from middleware or fallback to original query
         const queryData = (req as any).parsedQuery || (req as any).validatedQuery || req.query;
-        const result = await filterOffersAndGetPaymentServices(queryData);
+
+        // Get userId from authenticated user if available (optional)
+        const userId = (req as any).user?.userId;
+
+        const result = await filterOffersAndGetPaymentServices(queryData, userId);
 
         res.status(200).json({
             success: true,

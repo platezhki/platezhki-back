@@ -25,7 +25,7 @@ import {
     updateOfferSchema
 } from "../schemas/offers.schema";
 import { validateQuery, validateParams, validateBody } from "../middlewares/validate";
-import { authenticateToken } from "../middlewares/auth";
+import { authenticateToken, optionalAuth } from "../middlewares/auth";
 
 const router = Router();
 
@@ -33,7 +33,7 @@ const router = Router();
 router.get("/", validateQuery(getOffersSchema.shape.query), getOffersHandler);
 router.get("/ranges", getOfferRangesHandler);
 router.get("/slug/:slug", validateParams(getOfferBySlugSchema.shape.params), getOfferBySlugHandler);
-router.get("/filter", validateQuery(filterOffersSchema.shape.query), filterOffersHandler);
+router.get("/filter", optionalAuth, validateQuery(filterOffersSchema.shape.query), filterOffersHandler);
 
 // Private routes (authentication required) - specific routes first to avoid conflicts
 router.get("/my", authenticateToken, validateQuery(getUserOffersSchema.shape.query), getUserOffersHandler);
