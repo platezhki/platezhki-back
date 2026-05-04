@@ -10,6 +10,9 @@ const transformOffer = (offer: any) => {
   const { paymentServices, ...offerWithoutPaymentServices } = offer;
   const transformed = {
     ...offerWithoutPaymentServices,
+    // Convert BigInt fields to Number for JSON serialization
+    trafficVolumeMin: offer.trafficVolumeMin != null ? Number(offer.trafficVolumeMin) : 0,
+    trafficVolumeMax: offer.trafficVolumeMax != null ? Number(offer.trafficVolumeMax) : 0,
     countries: offer?.countries?.map((c: any) => c.country) || [],
     currencies: offer?.currencies?.map((c: any) => c.currency) || [],
     paymentSystemTypes: offer?.paymentSystemTypes?.[0]?.paymentSystemType || null,
@@ -190,8 +193,8 @@ export const getUserFavorites = async (userId: number, filters?: z.infer<typeof 
     if (filters?.trafficVolumeMin) {
       offerConditions.push({
         AND: [
-          { trafficVolumeMin: { lte: Number(filters.trafficVolumeMin) } },
-          { trafficVolumeMax: { gte: Number(filters.trafficVolumeMin) } }
+          { trafficVolumeMin: { lte: BigInt(filters.trafficVolumeMin) } },
+          { trafficVolumeMax: { gte: BigInt(filters.trafficVolumeMin) } }
         ]
       });
     }
@@ -199,8 +202,8 @@ export const getUserFavorites = async (userId: number, filters?: z.infer<typeof 
     if (filters?.trafficVolumeMax) {
       offerConditions.push({
         AND: [
-          { trafficVolumeMin: { lte: Number(filters.trafficVolumeMax) } },
-          { trafficVolumeMax: { gte: Number(filters.trafficVolumeMax) } }
+          { trafficVolumeMin: { lte: BigInt(filters.trafficVolumeMax) } },
+          { trafficVolumeMax: { gte: BigInt(filters.trafficVolumeMax) } }
         ]
       });
     }

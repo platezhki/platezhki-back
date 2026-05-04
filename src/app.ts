@@ -5,6 +5,12 @@ import swaggerUi from "swagger-ui-express";
 import { specs } from "./config/swagger";
 import routes from "./routes";
 
+// Global BigInt serialization fix — Prisma returns BigInt for columns like trafficVolumeMin/Max
+// JSON.stringify does not support BigInt by default, so we patch it globally.
+(BigInt.prototype as any).toJSON = function () {
+  return Number(this);
+};
+
 const app = express();
 
 // Enable CORS for all origins with credentials support

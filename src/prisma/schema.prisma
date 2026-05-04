@@ -129,8 +129,8 @@ model Offer {
   ownerId            Int
   updatedAt          DateTime                 @updatedAt
   slug               String                   @unique
-  trafficVolumeMax   Int
-  trafficVolumeMin   Int                      @default(0)
+  trafficVolumeMax   BigInt
+  trafficVolumeMin   BigInt                   @default(0)
   settleSpeedId      Int                      @default(1)
   balanceTypes       OfferBalanceType[]
   connectionTypes    OfferConnectionType[]

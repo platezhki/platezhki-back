@@ -130,6 +130,9 @@ const transformOffer = (offer: any) => {
   const {paymentServices, ...offerWithoutPaymentServices} = offer;
   const transformed = {
     ...offerWithoutPaymentServices,
+    // Convert BigInt fields to Number for JSON serialization
+    trafficVolumeMin: offer.trafficVolumeMin != null ? Number(offer.trafficVolumeMin) : 0,
+    trafficVolumeMax: offer.trafficVolumeMax != null ? Number(offer.trafficVolumeMax) : 0,
     countries: offer?.countries?.map((c: any) => c.country) || [],
     currencies: offer?.currencies?.map((c: any) => c.currency) || [],
     paymentSystemTypes: offer?.paymentSystemTypes?.[0]?.paymentSystemType || null,
@@ -216,8 +219,8 @@ export const createOffer = async (data: any) => {
         currencies: {create: currencies.map((currencyId: number) => ({currencyId}))},
         paymentSystemTypes: {create: paymentSystemTypes.map((paymentSystemTypeId: number) => ({paymentSystemTypeId}))},
         paymentMethods: {create: paymentMethodIds.map((paymentMethodId: number) => ({paymentMethodId}))},
-        trafficVolumeMin: data.trafficVolumeMin,
-        trafficVolumeMax: data.trafficVolumeMax,
+        trafficVolumeMin: BigInt(data.trafficVolumeMin ?? 0),
+        trafficVolumeMax: BigInt(data.trafficVolumeMax ?? 0),
         payInFee: data.payInFee,
         payOutFee: data.payOutFee,
         payInMinLimit: data.payInMinLimit,
@@ -421,8 +424,8 @@ export const updateOffer = async (id: number, data: any) => {
       data: {
         name: data.name || existingOffer.name,
         slug,
-        trafficVolumeMin: data.trafficVolumeMin ?? existingOffer.trafficVolumeMin,
-        trafficVolumeMax: data.trafficVolumeMax ?? existingOffer.trafficVolumeMax,
+        trafficVolumeMin: BigInt(data.trafficVolumeMin ?? existingOffer.trafficVolumeMin ?? 0),
+        trafficVolumeMax: BigInt(data.trafficVolumeMax ?? existingOffer.trafficVolumeMax ?? 0),
         payInFee: data.payInFee ?? existingOffer.payInFee,
         payOutFee: data.payOutFee ?? existingOffer.payOutFee,
         settleSpeedId: data.settleSpeedId ?? existingOffer.settleSpeedId,
@@ -710,12 +713,12 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
         AND: [
           {
             trafficVolumeMin: {
-              lte: Number(filters.trafficVolumeMin)
+              lte: BigInt(filters.trafficVolumeMin)
             }
           },
           {
             trafficVolumeMax: {
-              gte: Number(filters.trafficVolumeMin)
+              gte: BigInt(filters.trafficVolumeMin)
             }
           }
         ]
@@ -729,12 +732,12 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
         AND: [
           {
             trafficVolumeMin: {
-              lte: Number(filters.trafficVolumeMax)
+              lte: BigInt(filters.trafficVolumeMax)
             }
           },
           {
             trafficVolumeMax: {
-              gte: Number(filters.trafficVolumeMax)
+              gte: BigInt(filters.trafficVolumeMax)
             }
           }
         ]
@@ -905,40 +908,49 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
       });
     }
 
+    // Build the base offer condition: always require at least one active offer
+    const baseOfferCondition: any = { isActive: true };
+
+    // Add additional offer filter conditions if any
+    if (offerConditions.length > 0) {
+      baseOfferCondition.AND = offerConditions;
+    }
+
     // Handle search query - search both payment service names and offer names
     if (filters?.q) {
       // If we have a search query, we need to restructure the where clause
       // to support OR logic between payment service name and offer names
       const searchConditions = [];
 
-      // Search by payment service name
+      // Search by payment service name (but still must have active offers)
       searchConditions.push({
         name: {
           contains: filters.q,
           mode: 'insensitive'
+        },
+        paymentServiceOffers: {
+          some: {
+            offer: baseOfferCondition
+          }
         }
       });
 
-      // Search by offer name
-      const offerNameCondition: any = {
-        paymentServiceOffers: {
-          some: {
-            offer: {
-              name: {
-                contains: filters.q,
-                mode: 'insensitive'
-              }
-            }
-          }
+      // Search by offer name (with all offer conditions)
+      const offerNameFilter: any = {
+        ...baseOfferCondition,
+        name: {
+          contains: filters.q,
+          mode: 'insensitive'
         }
       };
 
-      // If there are other offer conditions, combine them with AND
-      if (offerConditions.length > 0) {
-        offerNameCondition.paymentServiceOffers.some.offer.AND = offerConditions;
-      }
-
-      searchConditions.push(offerNameCondition);
+      searchConditions.push({
+        paymentServiceOffers: {
+          some: {
+            offer: offerNameFilter
+          }
+        }
+      });
 
       // Combine search with existing where conditions using AND
       const existingConditions = {...where};
@@ -946,13 +958,11 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
         existingConditions,
         {OR: searchConditions}
       ];
-    } else if (offerConditions.length > 0) {
-      // No search query, just apply offer conditions normally
+    } else {
+      // No search query - always require at least one active offer matching conditions
       where.paymentServiceOffers = {
         some: {
-          offer: {
-            AND: offerConditions
-          }
+          offer: baseOfferCondition
         }
       };
     }
@@ -1073,7 +1083,7 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
           }
         } : false,
         paymentServiceOffers: {
-          where: {offer: {isActive: true}},
+          where: {offer: baseOfferCondition},
           include: {
             offer: {
               include: {
@@ -1170,7 +1180,7 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
     const pages = Math.ceil(total / limit);
 
     return {
-      data: transformedPaymentServices.filter((s: any) => s.offers && s.offers.length > 0),
+      data: transformedPaymentServices,
       pagination: {page, limit, total, pages},
       totalOffers,
       filters: Object.keys(filters || {}).filter(key => filters![key as keyof typeof filters] !== undefined)
@@ -1210,8 +1220,8 @@ export const getOfferRanges = async () => {
     const ranges: any = {};
 
     const trafficVolumeRange = calculateRange([
-      ...offers.map(o => o.trafficVolumeMin),
-      ...offers.map(o => o.trafficVolumeMax)
+      ...offers.map(o => o.trafficVolumeMin != null ? Number(o.trafficVolumeMin) : null),
+      ...offers.map(o => o.trafficVolumeMax != null ? Number(o.trafficVolumeMax) : null)
     ]);
     if (trafficVolumeRange) ranges.trafficVolume = trafficVolumeRange;
 

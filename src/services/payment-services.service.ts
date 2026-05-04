@@ -1242,6 +1242,9 @@ export const getPaymentServiceBySlug = async (slug: string) => {
             const offer = psOffer.offer;
             return {
                 ...offer,
+                // Convert BigInt fields to Number for JSON serialization
+                trafficVolumeMin: offer.trafficVolumeMin != null ? Number(offer.trafficVolumeMin) : 0,
+                trafficVolumeMax: offer.trafficVolumeMax != null ? Number(offer.trafficVolumeMax) : 0,
                 countries: offer?.countries?.map((c: any) => c.country) || [],
                 currencies: offer?.currencies?.map((c: any) => c.currency) || [],
                 paymentSystemTypes: offer?.paymentSystemTypes?.map((p: any) => p.paymentSystemType) || [],
