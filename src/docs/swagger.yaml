@@ -2233,8 +2233,8 @@ paths:
           name: order
           schema:
             type: string
-            enum: [ASC, DESC]
-            default: ASC
+            enum: [asc, desc]
+            default: asc
       responses:
         '200':
           description: Offers retrieved successfully
@@ -2581,8 +2581,8 @@ paths:
           name: order
           schema:
             type: string
-            enum: [ASC, DESC]
-            default: ASC
+            enum: [asc, desc]
+            default: asc
       responses:
         '200':
           description: User offers retrieved successfully
@@ -3192,8 +3192,8 @@ paths:
           name: order
           schema:
             type: string
-            enum: [ASC, DESC]
-            default: DESC
+            enum: [asc, desc]
+            default: desc
           description: Sort order (ascending or descending)
       security:
         - bearerAuth: []
@@ -4073,8 +4073,8 @@ paths:
           name: order
           schema:
             type: string
-            enum: [ASC, DESC]
-            default: ASC
+            enum: [asc, desc]
+            default: asc
           description: Sort order
       responses:
         '200':
