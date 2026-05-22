@@ -625,17 +625,6 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
     // Build where clause for payment services (not offers)
     const where: any = {isActive: true};
 
-    // Filter by countries - return payment services that have at least one of the specified countries
-    if (filters?.countries && filters.countries.length > 0) {
-      where.countries = {
-        some: {
-          countryId: {
-            in: filters.countries
-          }
-        }
-      };
-    }
-
     // Filter by currencies
     if (filters?.currencies && filters.currencies.length > 0) {
       where.currencies = {
@@ -648,6 +637,21 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
     }
 
     const offerConditions = [];
+
+    // Filter by countries - require the matched offer itself to cover at least one of the specified countries.
+    // Filtering on the payment service profile alone would let services through that list a country
+    // but have no active offer for it.
+    if (filters?.countries && filters.countries.length > 0) {
+      offerConditions.push({
+        countries: {
+          some: {
+            countryId: {
+              in: filters.countries
+            }
+          }
+        }
+      });
+    }
 
     // Filter by payment method ids attached to payment services (payIn / payOut)
     if (filters?.payMethods && filters.payMethods.length > 0) {
@@ -973,25 +977,9 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
     // Build offer where clause for counting total matching offers
     const offerWhere: any = {isActive: true};
 
-    // Apply offer-specific filters
+    // Apply offer-specific filters (countries are now part of offerConditions and matched against the offer itself)
     if (offerConditions.length > 0) {
       offerWhere.AND = offerConditions;
-    }
-
-    // Apply payment service filters to offers via their payment service relations
-    if (filters?.countries && filters.countries.length > 0) {
-      offerWhere.paymentServices = {
-        some: {
-          paymentService: {
-            isActive: true,
-            countries: {
-              some: {
-                countryId: {in: filters.countries}
-              }
-            }
-          }
-        }
-      };
     }
 
     // Apply search query to offers
