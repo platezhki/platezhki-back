@@ -218,5 +218,9 @@
     "already_added": "Платежная система уже в избранном",
     "not_found": "Платежная система не найдена в избранном",
     "retrieved_successfully": "Избранное успешно получено"
+  },
+  "telegram": {
+    "broadcast_not_found": "Рассылка не найдена",
+    "not_configured": "Telegram бот не настроен"
   }
 }

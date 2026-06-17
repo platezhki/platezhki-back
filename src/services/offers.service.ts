@@ -3,6 +3,7 @@ import {z} from "zod";
 import {getOffersSchema, filterOffersSchema} from "../schemas/offers.schema";
 import {generateSlugForEntity} from "../utils/slug";
 import {__} from "../utils/i18n";
+import {dispatchNewOfferNotifications, dispatchOfferUpdateNotifications, diffOfferFields} from "./telegram.service";
 
 const prisma = new PrismaClient();
 
@@ -245,6 +246,12 @@ export const createOffer = async (data: any) => {
       include: OFFER_INCLUDE_CONFIG
     });
 
+    // Notify subscribers (Telegram). Fire-and-forget; safe to skip if the
+    // offer is created in inactive state.
+    if (offer.isActive) {
+      dispatchNewOfferNotifications(offer);
+    }
+
     return transformOffer(offer);
   } catch (error) {
     throw error;
@@ -464,6 +471,15 @@ export const updateOffer = async (id: number, data: any) => {
     // Get the final updated offer with all relations
     const finalOffer = await getOfferWithRelations({id});
 
+    // Notify subscribers of favorited payment services about meaningful
+    // changes. Skipped for inactive offers and when nothing material changed.
+    if (finalOffer?.isActive && existingOffer.isActive) {
+      const changedFields = diffOfferFields(existingOffer, finalOffer);
+      if (changedFields.length) {
+        dispatchOfferUpdateNotifications(finalOffer, changedFields);
+      }
+    }
+
     return transformOffer(finalOffer);
   } catch (error) {
     throw error;
@@ -491,6 +507,12 @@ const updateOfferStatus = async (id: number, isActive: boolean, errorKey: string
     data: {isActive},
     include: OFFER_INCLUDE_CONFIG
   });
+
+  // Treat activation (inactive -> active) as a publish event so subscribers
+  // also get notified for offers that were created in draft state.
+  if (isActive && !existingOffer.isActive) {
+    dispatchNewOfferNotifications(updatedOffer);
+  }
 
   return transformOffer(updatedOffer);
 };

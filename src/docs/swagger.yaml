@@ -578,6 +578,207 @@ components:
           type: string
           example: "An error occurred"
 
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 135
+        pages:
+          type: integer
+          example: 7
+
+    TelegramPreferences:
+      type: object
+      description: Notification preferences. All fields are optional on update (partial patch).
+      properties:
+        notificationsEnabled:
+          type: boolean
+          description: Master switch — when false, no automatic notifications are sent at all.
+          example: true
+        notifyAllOffers:
+          type: boolean
+          description: Receive a notification for every new offer on the platform.
+          example: false
+        notifyFavorites:
+          type: boolean
+          description: Receive new-offer notifications only for favorited payment services.
+          example: true
+        notifyOfferUpdates:
+          type: boolean
+          description: Receive notifications when offers of favorited payment services are updated.
+          example: false
+
+    TelegramStatus:
+      type: object
+      properties:
+        isConnected:
+          type: boolean
+          example: false
+        botUsername:
+          type: string
+          nullable: true
+          example: Platezhki_Bot
+        preferences:
+          $ref: '#/components/schemas/TelegramPreferences'
+        telegram:
+          type: object
+          nullable: true
+          description: Present only when connected.
+          properties:
+            username:
+              type: string
+              nullable: true
+              example: mytg12_32
+            linkedAt:
+              type: string
+              format: date-time
+        startLink:
+          type: string
+          nullable: true
+          description: Telegram deep link; present only when not connected.
+          example: https://t.me/Platezhki_Bot?start=ab12cd34
+        deepLink:
+          type: string
+          nullable: true
+          example: https://t.me/Platezhki_Bot?start=ab12cd34
+        qrCodeData:
+          type: string
+          nullable: true
+          description: String the front-end renders into a QR code.
+          example: https://t.me/Platezhki_Bot?start=ab12cd34
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    TelegramBroadcastCreate:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4000
+          description: Message body (HTML parse mode).
+          example: "Важное обновление платформы!"
+        roleIds:
+          type: array
+          description: Restrict delivery to users with these role IDs. Omit to target all roles.
+          items:
+            type: integer
+          example: [3, 4]
+        onlyWithBot:
+          type: boolean
+          description: Only users who linked the bot (always effectively true — unlinked users cannot be reached).
+          example: true
+
+    TelegramBroadcast:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+        text:
+          type: string
+          example: "Важное обновление платформы!"
+        targetFilter:
+          type: object
+          description: Stored selector used to pick recipients.
+          properties:
+            roleIds:
+              type: array
+              items:
+                type: integer
+            onlyWithBot:
+              type: boolean
+        status:
+          type: string
+          enum: [pending, sending, completed, failed]
+          example: completed
+        totalCount:
+          type: integer
+          example: 100
+        sentCount:
+          type: integer
+          example: 92
+        failedCount:
+          type: integer
+          example: 5
+        skippedCount:
+          type: integer
+          example: 3
+        createdById:
+          type: integer
+          example: 1
+        createdBy:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            email:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    TelegramBroadcastDelivery:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 540
+        broadcastId:
+          type: integer
+          example: 12
+        userId:
+          type: integer
+          example: 87
+        status:
+          type: string
+          enum: [pending, sent, failed, skipped]
+          example: sent
+        errorMessage:
+          type: string
+          nullable: true
+          example: null
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            email:
+              type: string
+            telegramUsername:
+              type: string
+              nullable: true
+
     CreateUserRequest:
       type: object
       required:
@@ -4229,3 +4430,372 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /me/telegram:
+    get:
+      summary: Get current user's Telegram connection status
+      tags: [Telegram]
+      description: >
+        Returns whether the user has linked the Telegram bot, their notification
+        preferences, and — when not yet connected — a one-time deep link / QR
+        payload used to connect the bot. Requires authentication.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Telegram status retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TelegramStatus'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Unlink the Telegram bot from the current user
+      tags: [Telegram]
+      description: Detaches the connected Telegram chat and invalidates pending link tokens. Requires authentication.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Telegram unlinked
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          unlinked:
+                            type: boolean
+                            example: true
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /me/telegram/link:
+    post:
+      summary: Generate a fresh Telegram link token / deep link
+      tags: [Telegram]
+      description: >
+        Invalidates any pending link tokens and issues a new one. Returns the
+        Telegram deep link (used to render the QR code and "Open in Telegram"
+        button). Requires authentication.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: New link token generated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          startLink:
+                            type: string
+                            example: https://t.me/Platezhki_Bot?start=ab12cd34
+                          expiresAt:
+                            type: string
+                            format: date-time
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /me/telegram/preferences:
+    patch:
+      summary: Update Telegram notification preferences
+      tags: [Telegram]
+      description: >
+        Partial update of the user's notification settings. The
+        `notificationsEnabled` master switch gates all automatic notifications;
+        the individual type flags select what is sent. Requires authentication.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramPreferences'
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TelegramPreferences'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/telegram/broadcasts:
+    post:
+      summary: Create and start a Telegram broadcast
+      tags: [Telegram Admin]
+      description: >
+        Creates a broadcast and starts delivering it asynchronously to linked,
+        active users matching the target filter. Requires admin or moderator role.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramBroadcastCreate'
+      responses:
+        '201':
+          description: Broadcast created and queued
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TelegramBroadcast'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: List Telegram broadcasts with delivery stats
+      tags: [Telegram Admin]
+      description: Returns paginated broadcasts with aggregate send statistics. Requires admin or moderator role.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of items per page
+      responses:
+        '200':
+          description: Broadcasts retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TelegramBroadcast'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/telegram/broadcasts/{id}:
+    get:
+      summary: Get a single broadcast with per-recipient delivery statuses
+      tags: [Telegram Admin]
+      description: Returns the broadcast, its creator, and the full list of deliveries with status (sent/failed/skipped/pending). Requires admin or moderator role.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Broadcast ID
+      responses:
+        '200':
+          description: Broadcast retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/TelegramBroadcast'
+                          - type: object
+                            properties:
+                              deliveries:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/TelegramBroadcastDelivery'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Broadcast not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /telegram/webhook:
+    post:
+      summary: Telegram bot webhook (internal)
+      tags: [Telegram]
+      description: >
+        Endpoint called by Telegram for every bot update. Not for manual use —
+        it is verified via the `X-Telegram-Bot-Api-Secret-Token` header
+        configured at setWebhook time. Handles `/start <token>` deep links to
+        link a chat to a user account. Always responds 200 to prevent Telegram
+        retries.
+      parameters:
+        - in: header
+          name: X-Telegram-Bot-Api-Secret-Token
+          schema:
+            type: string
+          description: Secret token echoed back by Telegram for verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Telegram Update object
+      responses:
+        '200':
+          description: Acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+        '401':
+          description: Invalid secret token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: false

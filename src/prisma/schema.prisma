@@ -23,6 +23,16 @@ model User {
   isActive             Boolean             @default(true)
   emailVerified        Boolean             @default(false)
   lastActivity         DateTime            @default(now())
+  // Telegram bot linkage
+  telegramChatId       String?             @unique
+  telegramUsername     String?
+  telegramLinkedAt     DateTime?
+  // Master switch for all automatic Telegram notifications
+  notificationsEnabled Boolean             @default(true)
+  notifyAllOffers      Boolean             @default(false)
+  notifyFavorites      Boolean             @default(true)
+  // Updates to existing offers of favorited payment services
+  notifyOfferUpdates   Boolean             @default(false)
   authTokens           AuthToken[]
   languages            Language[]
   offers               Offer[]
@@ -40,6 +50,9 @@ model User {
   emailVerifications   EmailVerification[]
   passwordReset        PasswordReset[]
   favorites            Favorite[]
+  telegramLinkTokens   TelegramLinkToken[]
+  telegramBroadcasts   TelegramBroadcast[] @relation("TelegramBroadcastCreatedBy")
+  telegramDeliveries   TelegramBroadcastDelivery[]
 
   @@map("users")
 }
@@ -517,4 +530,54 @@ model Favorite {
   @@index([userId])
   @@index([paymentServiceId])
   @@map("favorites")
+}
+
+model TelegramLinkToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("telegram_link_tokens")
+}
+
+model TelegramBroadcast {
+  id           Int      @id @default(autoincrement())
+  text         String
+  // JSON-encoded selector: { roleIds?: number[], onlyWithBot?: boolean }
+  targetFilter Json     @default("{}")
+  status       String   @default("pending")
+  createdById  Int
+  createdAt    DateTime @default(now())
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  totalCount   Int      @default(0)
+  sentCount    Int      @default(0)
+  failedCount  Int      @default(0)
+  skippedCount Int      @default(0)
+  createdBy    User     @relation("TelegramBroadcastCreatedBy", fields: [createdById], references: [id])
+  deliveries   TelegramBroadcastDelivery[]
+
+  @@map("telegram_broadcasts")
+}
+
+model TelegramBroadcastDelivery {
+  id           Int      @id @default(autoincrement())
+  broadcastId  Int
+  userId       Int
+  status       String   @default("pending")
+  errorMessage String?
+  sentAt       DateTime?
+  createdAt    DateTime @default(now())
+  broadcast    TelegramBroadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([broadcastId, userId])
+  @@index([broadcastId])
+  @@index([userId])
+  @@map("telegram_broadcast_deliveries")
 }

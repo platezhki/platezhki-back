@@ -23,7 +23,11 @@
     "docs:serve": "npm run dev",
     "docs:open": "start http://localhost:3001/api-docs",
     "docs:validate": "ts-node src/scripts/validate-docs.ts",
-    "postman:generate": "ts-node src/scripts/generate-postman-dynamic.ts"
+    "postman:generate": "ts-node src/scripts/generate-postman-dynamic.ts",
+    "tg:webhook:set": "ts-node src/scripts/telegram-webhook.ts set",
+    "tg:webhook:delete": "ts-node src/scripts/telegram-webhook.ts delete",
+    "tg:webhook:info": "ts-node src/scripts/telegram-webhook.ts info",
+    "tg:poll": "ts-node src/scripts/telegram-poll.ts"
   },
   "keywords": [],
   "author": "",

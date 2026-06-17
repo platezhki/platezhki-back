@@ -8,6 +8,7 @@ import { authenticateToken } from "../middlewares/auth";
 import rolesRoutes from "./roles.routes";
 import offersRoutes from "./offers.routes";
 import favoritesRoutes from "./favorites.routes";
+import telegramRoutes from "./telegram.routes";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/settings", settingsRoutes);
 router.use("/roles", rolesRoutes);
 router.use("/offers", offersRoutes);
 router.use("/favorites", favoritesRoutes);
+router.use("/", telegramRoutes);
 
 export default router;

@@ -245,5 +245,9 @@
     "already_added": "Payment service is already in favorites",
     "not_found": "Payment service not found in favorites",
     "retrieved_successfully": "Favorites retrieved successfully"
+  },
+  "telegram": {
+    "broadcast_not_found": "Broadcast not found",
+    "not_configured": "Telegram bot is not configured"
   }
 }
