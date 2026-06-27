@@ -128,6 +128,9 @@ model PaymentService {
 model Offer {
   id                 Int                      @id @default(autoincrement())
   name               String
+  description        String?
+  merchantOnly       Boolean                  @default(false)
+  fieldSettings      Json                     @default("[]")
   payInFee           Float?                   @default(0)
   payOutFee          Float?                   @default(0)
   payInMinLimit      Float?                   @default(0)
@@ -156,8 +159,37 @@ model Offer {
   paymentMethods     OfferPaymentMethod[]
   paymentServices    PaymentServiceOffer[]
   settleSpeed        SettleSpeed              @relation(fields: [settleSpeedId], references: [id])
+  parameters         OfferParameter[]
+  files              OfferFile[]
 
   @@map("offers")
+}
+
+model OfferParameter {
+  id        Int     @id @default(autoincrement())
+  offerId   Int
+  name      String
+  value     String
+  order     Int     @default(0)
+  isVisible Boolean @default(true)
+  offer     Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId])
+  @@map("offer_parameters")
+}
+
+model OfferFile {
+  id        Int      @id @default(autoincrement())
+  offerId   Int
+  fileName  String
+  fileUrl   String
+  fileType  String?
+  fileSize  Int?
+  createdAt DateTime @default(now())
+  offer     Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId])
+  @@map("offer_files")
 }
 
 model OfferCountry {

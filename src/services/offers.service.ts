@@ -4,6 +4,7 @@ import {getOffersSchema, filterOffersSchema} from "../schemas/offers.schema";
 import {generateSlugForEntity} from "../utils/slug";
 import {__} from "../utils/i18n";
 import {dispatchNewOfferNotifications, dispatchOfferUpdateNotifications, diffOfferFields} from "./telegram.service";
+import {saveBase64Document, deleteUploadedFile} from "../utils/file-upload";
 
 const prisma = new PrismaClient();
 
@@ -46,6 +47,12 @@ const OFFER_INCLUDE_CONFIG = {
         }
       }
     }
+  },
+  parameters: {
+    orderBy: {order: 'asc'}
+  },
+  files: {
+    orderBy: {createdAt: 'asc'}
   }
 } as const;
 
@@ -63,6 +70,39 @@ const toIdArray = (value: any) => Array.from(new Set(
     .map((v: any) => Number(v))
     .filter((v: number) => Number.isFinite(v) && v > 0)
 ));
+
+const normalizeFieldSettings = (fieldSettings: any) => {
+  if (!Array.isArray(fieldSettings)) return [];
+  return fieldSettings.map((fs: any, index: number) => ({
+    key: String(fs.key),
+    visible: fs.visible !== undefined ? Boolean(fs.visible) : true,
+    order: fs.order !== undefined ? Number(fs.order) : index
+  }));
+};
+
+const normalizeParameters = (parameters: any) => {
+  if (!Array.isArray(parameters)) return [];
+  return parameters.map((p: any, index: number) => ({
+    name: String(p.name),
+    value: p.value != null ? String(p.value) : '',
+    order: p.order !== undefined ? Number(p.order) : index,
+    isVisible: p.isVisible !== undefined ? Boolean(p.isVisible) : true
+  }));
+};
+
+const saveOfferFiles = (files: any) => {
+  if (!Array.isArray(files) || files.length === 0) return [];
+  const saved: Array<{fileName: string; fileUrl: string; fileType: string | null; fileSize: number}> = [];
+  try {
+    for (const f of files) {
+      saved.push(saveBase64Document(f.file, f.fileName));
+    }
+  } catch (error) {
+    saved.forEach((s) => deleteUploadedFile(s.fileUrl));
+    throw error;
+  }
+  return saved;
+};
 
 // Helper function to validate entity IDs
 const validateEntityIds = async (ids: number[], entityName: string, prismaModel: any, errorKey: string) => {
@@ -212,10 +252,17 @@ export const createOffer = async (data: any) => {
       validateEntityIds([data.ownerId], 'User', prisma.user, 'offer.invalid_user_id')
     ]);
 
+    const savedFiles = saveOfferFiles(data.files);
+
+    const parameters = normalizeParameters(data.parameters);
+
     // Create offer with relations
     const offer = await prisma.offer.create({
       data: {
         name: data.name,
+        description: data.description ?? null,
+        merchantOnly: data.merchantOnly ?? false,
+        fieldSettings: normalizeFieldSettings(data.fieldSettings),
         countries: {create: countries.map((countryId: number) => ({countryId}))},
         currencies: {create: currencies.map((currencyId: number) => ({currencyId}))},
         paymentSystemTypes: {create: paymentSystemTypes.map((paymentSystemTypeId: number) => ({paymentSystemTypeId}))},
@@ -242,6 +289,8 @@ export const createOffer = async (data: any) => {
         paymentServices: userPaymentService ? {
           create: [{paymentServiceId: userPaymentService.id}]
         } : undefined,
+        parameters: parameters.length > 0 ? {create: parameters} : undefined,
+        files: savedFiles.length > 0 ? {create: savedFiles} : undefined,
       },
       include: OFFER_INCLUDE_CONFIG
     });
@@ -430,6 +479,9 @@ export const updateOffer = async (id: number, data: any) => {
       where: {id},
       data: {
         name: data.name || existingOffer.name,
+        description: data.description !== undefined ? data.description : existingOffer.description,
+        merchantOnly: data.merchantOnly ?? existingOffer.merchantOnly,
+        fieldSettings: data.fieldSettings !== undefined ? normalizeFieldSettings(data.fieldSettings) : (existingOffer.fieldSettings as any),
         slug,
         trafficVolumeMin: BigInt(data.trafficVolumeMin ?? existingOffer.trafficVolumeMin ?? 0),
         trafficVolumeMax: BigInt(data.trafficVolumeMax ?? existingOffer.trafficVolumeMax ?? 0),
@@ -463,6 +515,23 @@ export const updateOffer = async (id: number, data: any) => {
       if (data[field]) {
         await updateRelation(id, model, foreignKey, data[field]);
       }
+    }
+
+    if (data.parameters !== undefined) {
+      const parameters = normalizeParameters(data.parameters);
+      await prisma.offerParameter.deleteMany({where: {offerId: id}});
+      if (parameters.length > 0) {
+        await prisma.offerParameter.createMany({
+          data: parameters.map((p) => ({...p, offerId: id}))
+        });
+      }
+    }
+
+    if (data.files !== undefined && Array.isArray(data.files) && data.files.length > 0) {
+      const savedFiles = saveOfferFiles(data.files);
+      await prisma.offerFile.createMany({
+        data: savedFiles.map((f) => ({...f, offerId: id}))
+      });
     }
 
     // Ensure payment service connection
@@ -543,6 +612,8 @@ export const deleteOffer = async (id: number) => {
       throw new Error(__('offer.not_found'));
     }
 
+    const offerFiles = await prisma.offerFile.findMany({where: {offerId: id}});
+
     // Delete all related records in parallel
     await Promise.all([
       prisma.offerCountry.deleteMany({where: {offerId: id}}),
@@ -553,8 +624,12 @@ export const deleteOffer = async (id: number) => {
       prisma.offerConnectionType.deleteMany({where: {offerId: id}}),
       prisma.offerBalanceType.deleteMany({where: {offerId: id}}),
       prisma.offerPaymentMethod.deleteMany({where: {offerId: id}}),
-      prisma.paymentServiceOffer.deleteMany({where: {offerId: id}})
+      prisma.paymentServiceOffer.deleteMany({where: {offerId: id}}),
+      prisma.offerParameter.deleteMany({where: {offerId: id}}),
+      prisma.offerFile.deleteMany({where: {offerId: id}})
     ]);
+
+    offerFiles.forEach((f) => deleteUploadedFile(f.fileUrl));
 
     // Now delete the offer
     await prisma.offer.delete({
@@ -1257,4 +1332,57 @@ export const getOfferRanges = async () => {
   } catch (error) {
     throw error;
   }
+};
+
+export const getOfferFiles = async (offerId: number) => {
+  const offer = await prisma.offer.findUnique({where: {id: offerId}});
+  if (!offer) {
+    throw new Error(__('offer.not_found'));
+  }
+  return prisma.offerFile.findMany({
+    where: {offerId},
+    orderBy: {createdAt: 'asc'}
+  });
+};
+
+export const addOfferFiles = async (offerId: number, files: any) => {
+  const offer = await prisma.offer.findUnique({where: {id: offerId}});
+  if (!offer) {
+    throw new Error(__('offer.not_found'));
+  }
+
+  const savedFiles = saveOfferFiles(files);
+
+  await prisma.offerFile.createMany({
+    data: savedFiles.map((f) => ({...f, offerId}))
+  });
+
+  return prisma.offerFile.findMany({
+    where: {offerId},
+    orderBy: {createdAt: 'asc'}
+  });
+};
+
+export const getOfferFile = async (offerId: number, fileId: number) => {
+  const file = await prisma.offerFile.findFirst({
+    where: {id: fileId, offerId}
+  });
+  if (!file) {
+    throw new Error(__('offer.file_not_found'));
+  }
+  return file;
+};
+
+export const deleteOfferFile = async (offerId: number, fileId: number) => {
+  const file = await prisma.offerFile.findFirst({
+    where: {id: fileId, offerId}
+  });
+  if (!file) {
+    throw new Error(__('offer.file_not_found'));
+  }
+
+  await prisma.offerFile.delete({where: {id: fileId}});
+  deleteUploadedFile(file.fileUrl);
+
+  return {message: __('offer.file_deleted_successfully')};
 };

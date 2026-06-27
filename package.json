@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy:assets",
+    "copy:assets": "node -e \"const fs=require('fs');fs.mkdirSync('dist/docs',{recursive:true});fs.copyFileSync('src/docs/swagger.yaml','dist/docs/swagger.yaml')\"",
     "start": "node dist/server.js",
     "seed": "ts-node src/prisma/seed.ts",
     "db:generate": "npx prisma generate --schema=src/prisma/schema.prisma",

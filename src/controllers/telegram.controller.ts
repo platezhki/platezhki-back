@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import {
   createBroadcast,
   getBroadcast,
+  getBroadcastStats,
   getTelegramStatusForUser,
   listBroadcasts,
   processTelegramUpdate,
@@ -132,6 +133,15 @@ export const listBroadcastsHandler = async (req: AuthenticatedRequest, res: Resp
     const query = (req as any).validatedQuery || req.query;
     const result = await listBroadcasts(query);
     res.status(200).json({ success: true, ...result });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getBroadcastStatsHandler = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const stats = await getBroadcastStats();
+    res.status(200).json({ success: true, data: stats });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }

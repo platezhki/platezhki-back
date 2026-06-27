@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { PrismaClient } from '../generated/prisma';
+import { Prisma, PrismaClient } from '../generated/prisma';
 import { __ } from '../utils/i18n';
 import {
   buildStartLink,
@@ -625,12 +625,66 @@ const runBroadcast = async (broadcastId: number) => {
   });
 };
 
-export const listBroadcasts = async (filters: { page?: number; limit?: number } = {}) => {
+type BroadcastDisplayStatus = 'queued' | 'sending' | 'sent' | 'partial' | 'not_sent' | 'failed';
+
+const resolveDisplayStatus = (b: {
+  status: string;
+  sentCount: number;
+  failedCount: number;
+}): BroadcastDisplayStatus => {
+  if (b.status === 'pending') return 'queued';
+  if (b.status === 'sending') return 'sending';
+  if (b.status === 'failed') return 'failed';
+  if (b.sentCount === 0) return 'not_sent';
+  if (b.failedCount > 0) return 'partial';
+  return 'sent';
+};
+
+const buildBroadcastStatusFilter = (status?: string): Prisma.TelegramBroadcastWhereInput | undefined => {
+  switch (status) {
+    case 'pending':
+      return { status: 'pending' };
+    case 'sending':
+      return { status: 'sending' };
+    case 'completed':
+      return { status: 'completed' };
+    case 'failed':
+      return { status: 'failed' };
+    case 'sent':
+      return { status: 'completed', sentCount: { gt: 0 }, failedCount: 0 };
+    case 'partial':
+      return { status: 'completed', sentCount: { gt: 0 }, failedCount: { gt: 0 } };
+    case 'not_sent':
+      return { OR: [{ status: 'completed', sentCount: 0 }, { status: 'failed' }] };
+    default:
+      return undefined;
+  }
+};
+
+export const listBroadcasts = async (
+  filters: { page?: number; limit?: number; search?: string; status?: string } = {},
+) => {
   const page = Math.max(1, Number(filters.page) || 1);
   const limit = Math.max(1, Math.min(100, Number(filters.limit) || 20));
 
+  const where: Prisma.TelegramBroadcastWhereInput = {};
+  const search = filters.search?.trim();
+  if (search) {
+    where.createdBy = {
+      is: {
+        OR: [
+          { username: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+        ],
+      },
+    };
+  }
+  const statusFilter = buildBroadcastStatusFilter(filters.status);
+  if (statusFilter) Object.assign(where, statusFilter);
+
   const [items, total] = await Promise.all([
     prisma.telegramBroadcast.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,
@@ -638,12 +692,45 @@ export const listBroadcasts = async (filters: { page?: number; limit?: number } 
         createdBy: { select: { id: true, username: true, email: true } },
       },
     }),
-    prisma.telegramBroadcast.count(),
+    prisma.telegramBroadcast.count({ where }),
   ]);
 
   return {
-    data: items,
+    data: items.map((b) => ({ ...b, displayStatus: resolveDisplayStatus(b) })),
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  };
+};
+
+export const getBroadcastStats = async () => {
+  const [
+    totalBroadcasts,
+    withErrors,
+    inQueue,
+    sent,
+    deliveredAgg,
+    reachedRows,
+  ] = await Promise.all([
+    prisma.telegramBroadcast.count(),
+    prisma.telegramBroadcast.count({
+      where: { OR: [{ status: 'failed' }, { failedCount: { gt: 0 } }] },
+    }),
+    prisma.telegramBroadcast.count({ where: { status: { in: ['pending', 'sending'] } } }),
+    prisma.telegramBroadcast.count({ where: { status: 'completed' } }),
+    prisma.telegramBroadcast.aggregate({ _sum: { sentCount: true } }),
+    prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(DISTINCT "userId")::bigint AS count
+      FROM telegram_broadcast_deliveries
+      WHERE status = 'sent'
+    `,
+  ]);
+
+  return {
+    totalBroadcasts,
+    withErrors,
+    inQueue,
+    sent,
+    totalDelivered: deliveredAgg._sum.sentCount ?? 0,
+    reachedUsers: Number(reachedRows[0]?.count ?? 0),
   };
 };
 

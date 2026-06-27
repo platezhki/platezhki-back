@@ -10,7 +10,11 @@ import {
     getOfferByIdHandler,
     getOfferBySlugHandler,
     filterOffersHandler,
-    getOfferRangesHandler
+    getOfferRangesHandler,
+    getOfferFilesHandler,
+    uploadOfferFilesHandler,
+    downloadOfferFileHandler,
+    deleteOfferFileHandler
 } from "../controllers/offers.controller";
 import {
     getUserOffersSchema,
@@ -22,7 +26,9 @@ import {
     getOfferBySlugSchema,
     filterOffersSchema,
     createOfferSchema,
-    updateOfferSchema
+    updateOfferSchema,
+    uploadOfferFileSchema,
+    offerFileParamsSchema
 } from "../schemas/offers.schema";
 import { validateQuery, validateParams, validateBody } from "../middlewares/validate";
 import { authenticateToken, optionalAuth } from "../middlewares/auth";
@@ -42,6 +48,12 @@ router.post("/:id/activate", authenticateToken, validateParams(activateOfferSche
 router.post("/:id/deactivate", authenticateToken, validateParams(deactivateOfferSchema.shape.params), deactivateOfferHandler);
 router.patch("/:id", authenticateToken, validateParams(updateOfferSchema.shape.params), validateBody(updateOfferSchema.shape.body), updateOfferHandler);
 router.delete("/:id", authenticateToken, validateParams(deleteOfferSchema.shape.params), deleteOfferHandler);
+
+// Offer files
+router.get("/:id/files", validateParams(getOfferSchema.shape.params), getOfferFilesHandler);
+router.get("/:id/files/:fileId/download", validateParams(offerFileParamsSchema.shape.params), downloadOfferFileHandler);
+router.post("/:id/files", authenticateToken, validateParams(uploadOfferFileSchema.shape.params), validateBody(uploadOfferFileSchema.shape.body), uploadOfferFilesHandler);
+router.delete("/:id/files/:fileId", authenticateToken, validateParams(offerFileParamsSchema.shape.params), deleteOfferFileHandler);
 
 // Public routes that need to be after specific routes to avoid conflicts
 router.get("/:id", validateParams(getOfferSchema.shape.params), getOfferByIdHandler);

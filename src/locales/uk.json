@@ -65,6 +65,7 @@
     "file_too_large": "Розмір файлу не повинен перевищувати 10МБ",
     "invalid_file_type": "Тип файлу повинен бути PNG або JPG",
     "file_upload_failed": "Не вдалося завантажити файл",
+    "files_required": "Потрібен хоча б один файл",
     "slug_required": "Slug обов'язковий",
     "id_required": "ID обов'язковий",
     "invalid_logo_url": "Невірне посилання на логотип",
@@ -155,7 +156,11 @@
     "invalid_connection_type_ids": "Деякі ID типів підключень невірні",
     "invalid_balance_type_ids": "Деякі ID типів балансу невірні",
     "invalid_settle_speed_id": "Невірний ID швидкості зарахування",
-    "no_settle_speed_configured": "Швидкості зарахування не налаштовані"
+    "no_settle_speed_configured": "Швидкості зарахування не налаштовані",
+    "file_not_found": "Файл оффера не знайдено",
+    "file_uploaded_successfully": "Файл успішно завантажено",
+    "file_deleted_successfully": "Файл успішно видалено",
+    "files_retrieved_successfully": "Файли оффера успішно отримано"
   },
   "settings": {
     "name_exists": "Налаштування з такою назвою вже існує",

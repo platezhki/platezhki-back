@@ -17,7 +17,19 @@ export const broadcastIdParamSchema = z.object({
   id: z.string().regex(/^\d+$/),
 });
 
+export const broadcastStatusFilterValues = [
+  'pending',
+  'sending',
+  'completed',
+  'failed',
+  'sent',
+  'partial',
+  'not_sent',
+] as const;
+
 export const listBroadcastsQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
+  search: z.string().trim().min(1).max(255).optional(),
+  status: z.enum(broadcastStatusFilterValues).optional(),
 });

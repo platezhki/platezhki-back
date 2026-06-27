@@ -65,6 +65,7 @@
     "file_too_large": "File size must not exceed 10MB",
     "invalid_file_type": "File type must be PNG or JPG",
     "file_upload_failed": "File upload failed",
+    "files_required": "At least one file is required",
     "slug_required": "Slug is required",
     "id_required": "ID is required",
     "invalid_logo_url": "Invalid logo URL",
@@ -155,7 +156,11 @@
     "invalid_connection_type_ids": "One or more connection type IDs are invalid",
     "invalid_balance_type_ids": "One or more balance type IDs are invalid",
     "invalid_settle_speed_id": "Invalid settle speed ID",
-    "no_settle_speed_configured": "No settle speeds configured"
+    "no_settle_speed_configured": "No settle speeds configured",
+    "file_not_found": "Offer file not found",
+    "file_uploaded_successfully": "File uploaded successfully",
+    "file_deleted_successfully": "File deleted successfully",
+    "files_retrieved_successfully": "Offer files retrieved successfully"
   },
   "settings": {
     "name_exists": "Setting with this name already exists",

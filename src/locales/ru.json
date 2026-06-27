@@ -58,6 +58,7 @@
     "file_too_large": "Размер файла не должен превышать 10МБ",
     "invalid_file_type": "Тип файла должен быть PNG или JPG",
     "file_upload_failed": "Ошибка загрузки файла",
+    "files_required": "Требуется хотя бы один файл",
     "slug_required": "Слаг обязателен",
     "id_required": "ID обязателен",
     "invalid_logo_url": "Неверный URL логотипа",
@@ -147,7 +148,11 @@
     "invalid_connection_type_ids": "Некоторые ID типов подключений неверны",
     "invalid_balance_type_ids": "Некоторые ID типов баланса неверны",
     "invalid_settle_speed_id": "Неверный ID скорости зачисления",
-    "no_settle_speed_configured": "Скорости зачисления не настроены"
+    "no_settle_speed_configured": "Скорости зачисления не настроены",
+    "file_not_found": "Файл оффера не найден",
+    "file_uploaded_successfully": "Файл успешно загружен",
+    "file_deleted_successfully": "Файл успешно удалён",
+    "files_retrieved_successfully": "Файлы оффера успешно получены"
   },
   "user": {
     "created_successfully": "Пользователь успешно создан",

@@ -213,6 +213,30 @@ components:
         name:
           type: string
           example: "Premium Exchange Offer"
+        description:
+          type: string
+          nullable: true
+          maxLength: 600
+          example: "Описание оффера с деталями условий"
+        merchantOnly:
+          type: boolean
+          description: When true, all configured parameters are visible to merchants only
+          example: false
+        fieldSettings:
+          type: array
+          description: Per-field visibility and ordering config for the predefined parameters
+          items:
+            $ref: '#/components/schemas/OfferFieldSetting'
+        parameters:
+          type: array
+          description: Custom offer parameters
+          items:
+            $ref: '#/components/schemas/OfferParameter'
+        files:
+          type: array
+          description: Files attached to the offer
+          items:
+            $ref: '#/components/schemas/OfferFile'
         slug:
           type: string
           example: "premium-exchange-offer"
@@ -316,6 +340,117 @@ components:
               type: integer
               example: 12
 
+    OfferFieldSetting:
+      type: object
+      properties:
+        key:
+          type: string
+          description: Identifier of the predefined parameter
+          example: "geolocation"
+        visible:
+          type: boolean
+          example: true
+        order:
+          type: integer
+          example: 0
+
+    OfferParameter:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        offerId:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Новый параметр 1"
+        value:
+          type: string
+          example: "Значение параметра"
+        order:
+          type: integer
+          example: 0
+        isVisible:
+          type: boolean
+          example: true
+
+    OfferParameterInput:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          example: "Новый параметр 1"
+        value:
+          type: string
+          maxLength: 1000
+          example: "Значение параметра"
+        order:
+          type: integer
+          example: 0
+        isVisible:
+          type: boolean
+          example: true
+
+    OfferFile:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        offerId:
+          type: integer
+          example: 1
+        fileName:
+          type: string
+          example: "proposal.pdf"
+        fileUrl:
+          type: string
+          example: "/uploads/offer-files/proposal-1700000000000.pdf"
+        fileType:
+          type: string
+          nullable: true
+          example: "application/pdf"
+        fileSize:
+          type: integer
+          nullable: true
+          description: Size in bytes
+          example: 348160
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-06-27T00:00:00.000Z"
+
+    OfferFileInput:
+      type: object
+      required:
+        - file
+        - fileName
+      properties:
+        file:
+          type: string
+          description: Base64-encoded file content (optionally with a data URL prefix). Allowed types pdf/xls/xlsx, max 2 MB.
+          example: "data:application/pdf;base64,JVBERi0xLjQ..."
+        fileName:
+          type: string
+          example: "proposal.pdf"
+
+    OfferFileUploadRequest:
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OfferFileInput'
+
     TrafficSource:
       type: object
       properties:
@@ -407,6 +542,131 @@ components:
         - automatics
         - trafficSources
         - trafficTypes
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          example: "Premium Exchange Offer"
+        description:
+          type: string
+          maxLength: 600
+          example: "Описание оффера с деталями условий"
+        merchantOnly:
+          type: boolean
+          default: false
+          description: When true, all configured parameters are visible to merchants only
+        fieldSettings:
+          type: array
+          description: Per-field visibility and ordering config for the predefined parameters
+          items:
+            $ref: '#/components/schemas/OfferFieldSetting'
+        parameters:
+          type: array
+          description: Custom offer parameters
+          items:
+            $ref: '#/components/schemas/OfferParameterInput'
+        files:
+          type: array
+          description: Files to attach on creation (base64). Allowed types pdf/xls/xlsx, max 2 MB each.
+          items:
+            $ref: '#/components/schemas/OfferFileInput'
+        countries:
+          type: array
+          items:
+            type: integer
+          example: [1, 2]
+        currencies:
+          type: array
+          items:
+            type: integer
+          example: [1, 2]
+        paymentSystemTypes:
+          oneOf:
+            - type: integer
+            - type: array
+              items:
+                type: integer
+          example: [1]
+        paymentMethods:
+          oneOf:
+            - type: integer
+            - type: array
+              items:
+                type: integer
+          example: [1, 2]
+        trafficVolumeMin:
+          type: integer
+          example: 0
+        trafficVolumeMax:
+          type: integer
+          example: 10000
+        payInFee:
+          type: number
+          format: float
+          example: 2.0
+        payOutFee:
+          type: number
+          format: float
+          example: 3.0
+        payInMinLimit:
+          type: number
+          format: float
+          example: 10.0
+        payInMaxLimit:
+          type: number
+          format: float
+          example: 5000.0
+        payOutMinLimit:
+          type: number
+          format: float
+          example: 10.0
+        payOutMaxLimit:
+          type: number
+          format: float
+          example: 5000.0
+        support247:
+          type: boolean
+          example: true
+        automatics:
+          type: boolean
+          example: false
+        legalPerson:
+          type: boolean
+          example: true
+        trafficSources:
+          oneOf:
+            - type: integer
+            - type: array
+              items:
+                type: integer
+          example: [1]
+        trafficTypes:
+          oneOf:
+            - type: integer
+            - type: array
+              items:
+                type: integer
+          example: [1]
+        connectionTypes:
+          oneOf:
+            - type: integer
+            - type: array
+              items:
+                type: integer
+          example: [1]
+        balanceTypes:
+          oneOf:
+            - type: integer
+            - type: array
+              items:
+                type: integer
+          example: [1]
+        settleSpeedId:
+          type: integer
+          example: 1
+        isActive:
+          type: boolean
+          default: true
 
     GoogleLoginRequest:
       type: object
@@ -898,6 +1158,28 @@ components:
       properties:
         name:
           type: string
+        description:
+          type: string
+          nullable: true
+          maxLength: 600
+        merchantOnly:
+          type: boolean
+          description: When true, all configured parameters are visible to merchants only
+        fieldSettings:
+          type: array
+          description: Per-field visibility and ordering config for the predefined parameters
+          items:
+            $ref: '#/components/schemas/OfferFieldSetting'
+        parameters:
+          type: array
+          description: Custom offer parameters. Replaces the existing set when provided.
+          items:
+            $ref: '#/components/schemas/OfferParameterInput'
+        files:
+          type: array
+          description: Additional files to attach (base64). Appended to existing files. Allowed types pdf/xls/xlsx, max 2 MB each.
+          items:
+            $ref: '#/components/schemas/OfferFileInput'
         trafficVolumeMin:
           type: integer
         trafficVolumeMax:
@@ -3081,6 +3363,199 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /offers/{id}/files:
+    get:
+      summary: List offer files
+      tags: [Offers]
+      description: Returns the files attached to an offer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Offer files retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OfferFile'
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Upload offer files
+      tags: [Offers]
+      description: Uploads one or more base64 files (pdf/xls/xlsx, max 2 MB each) to an offer. Requires authentication and ownership or admin role.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfferFileUploadRequest'
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OfferFile'
+        '400':
+          description: Unsupported file type or file too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /offers/{id}/files/{fileId}/download:
+    get:
+      summary: Download offer file
+      tags: [Offers]
+      description: Downloads a file attached to an offer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: fileId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Offer file not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /offers/{id}/files/{fileId}:
+    delete:
+      summary: Delete offer file
+      tags: [Offers]
+      description: Deletes a file attached to an offer (DB record and file on disk). Requires authentication and ownership or admin role.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: fileId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Offer file not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /settings:
     get:
       summary: Get all settings
@@ -4662,6 +5137,19 @@ paths:
             maximum: 100
             default: 20
           description: Number of items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search broadcasts by author username or email (case-insensitive)
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, sending, completed, failed, sent, partial, not_sent]
+          description: >
+            Filter by status. Lifecycle: pending, sending, completed, failed.
+            Derived: sent (all delivered), partial (some failed), not_sent (none delivered).
       responses:
         '200':
           description: Broadcasts retrieved
@@ -4675,9 +5163,75 @@ paths:
                       data:
                         type: array
                         items:
-                          $ref: '#/components/schemas/TelegramBroadcast'
+                          allOf:
+                            - $ref: '#/components/schemas/TelegramBroadcast'
+                            - type: object
+                              properties:
+                                displayStatus:
+                                  type: string
+                                  enum: [queued, sending, sent, partial, not_sent, failed]
                       pagination:
                         $ref: '#/components/schemas/Pagination'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/telegram/broadcasts/stats:
+    get:
+      summary: Aggregate broadcast statistics
+      tags: [Telegram Admin]
+      description: >
+        Returns dashboard counters across all broadcasts: total, with errors,
+        in queue, sent, total delivered messages, and reached (unique) users.
+        Requires admin or moderator role.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Statistics retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          totalBroadcasts:
+                            type: integer
+                            description: Total number of broadcasts
+                          withErrors:
+                            type: integer
+                            description: Broadcasts that failed or have at least one failed delivery
+                          inQueue:
+                            type: integer
+                            description: Broadcasts pending or currently sending
+                          sent:
+                            type: integer
+                            description: Completed broadcasts
+                          totalDelivered:
+                            type: integer
+                            description: Total number of successfully delivered messages
+                          reachedUsers:
+                            type: integer
+                            description: Unique users who received at least one message
         '401':
           description: Unauthorized
           content:
@@ -4754,48 +5308,3 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-  /telegram/webhook:
-    post:
-      summary: Telegram bot webhook (internal)
-      tags: [Telegram]
-      description: >
-        Endpoint called by Telegram for every bot update. Not for manual use —
-        it is verified via the `X-Telegram-Bot-Api-Secret-Token` header
-        configured at setWebhook time. Handles `/start <token>` deep links to
-        link a chat to a user account. Always responds 200 to prevent Telegram
-        retries.
-      parameters:
-        - in: header
-          name: X-Telegram-Bot-Api-Secret-Token
-          schema:
-            type: string
-          description: Secret token echoed back by Telegram for verification
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              description: Telegram Update object
-      responses:
-        '200':
-          description: Acknowledged
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                    example: true
-        '401':
-          description: Invalid secret token
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                    example: false

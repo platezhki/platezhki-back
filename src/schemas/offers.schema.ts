@@ -4,11 +4,34 @@ import { __ } from "../utils/i18n";
 // Helper to accept either a single number or array of numbers and always transform to number[]
 const numOrArray = z.union([z.number(), z.array(z.number())]).transform((v) => Array.isArray(v) ? v : [v]);
 
+const fieldSettingSchema = z.object({
+  key: z.string().min(1),
+  visible: z.boolean().optional().default(true),
+  order: z.number().int().optional().default(0),
+});
+
+const offerParameterSchema = z.object({
+  name: z.string().min(1, __("validation.name_required")).max(255, __("validation.name_too_long")),
+  value: z.string().max(1000),
+  order: z.number().int().optional().default(0),
+  isVisible: z.boolean().optional().default(true),
+});
+
+const offerFileInputSchema = z.object({
+  file: z.string().min(1),
+  fileName: z.string().min(1),
+});
+
 export const createOfferSchema = z.object({
   body: z.object({
     name: z.string()
       .min(1, __("validation.name_required"))
       .max(255, __("validation.name_too_long")),
+    description: z.string().max(600, __("validation.description_too_long")).optional(),
+    merchantOnly: z.boolean().optional().default(false),
+    fieldSettings: z.array(fieldSettingSchema).optional(),
+    parameters: z.array(offerParameterSchema).optional(),
+    files: z.array(offerFileInputSchema).optional(),
     countries: z.array(z.number()).min(1, __("validation.countries_required")),
     currencies: z.array(z.number()).min(1, __("validation.currencies_required")),
     paymentSystemTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.payment_system_types_required")),
@@ -78,6 +101,11 @@ export const getOfferSchema = z.object({
 export const updateOfferSchema = z.object({
   body: z.object({
     name: z.string().min(1, __("validation.name_required")).max(255, __("validation.name_too_long")).optional(),
+    description: z.string().max(600, __("validation.description_too_long")).optional(),
+    merchantOnly: z.boolean().optional(),
+    fieldSettings: z.array(fieldSettingSchema).optional(),
+    parameters: z.array(offerParameterSchema).optional(),
+    files: z.array(offerFileInputSchema).optional(),
     countries: z.array(z.number()).min(1, __("validation.countries_required")).optional(),
     currencies: z.array(z.number()).min(1, __("validation.currencies_required")).optional(),
     paymentSystemTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.payment_system_types_required")).optional(),
@@ -151,6 +179,22 @@ export const deleteOfferSchema = z.object({
 export const getOfferBySlugSchema = z.object({
   params: z.object({
     slug: z.string().min(1, __("validation.slug_required")),
+  }),
+});
+
+export const uploadOfferFileSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, __("validation.id_required")),
+  }),
+  body: z.object({
+    files: z.array(offerFileInputSchema).min(1, __("validation.files_required")),
+  }),
+});
+
+export const offerFileParamsSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, __("validation.id_required")),
+    fileId: z.string().min(1, __("validation.id_required")),
   }),
 });
 

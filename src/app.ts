@@ -33,6 +33,8 @@ app.use(express.urlencoded({
 // Parse cookies (for httpOnly device cookie used in active users endpoint)
 app.use(cookieParser());
 
+app.use("/uploads", express.static("public/uploads"));
+
 // Custom query parser to handle array parameters like countries[0]=1
 app.use((req, res, next) => {
   if (req.query) {

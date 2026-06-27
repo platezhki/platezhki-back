@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createBroadcastHandler,
   getBroadcastHandler,
+  getBroadcastStatsHandler,
   getMyTelegramStatusHandler,
   listBroadcastsHandler,
   refreshMyTelegramLinkHandler,
@@ -49,6 +50,12 @@ router.get(
   requireAdminOrModerator(),
   validateQuery(listBroadcastsQuerySchema),
   listBroadcastsHandler,
+);
+router.get(
+  '/admin/telegram/broadcasts/stats',
+  authenticateToken,
+  requireAdminOrModerator(),
+  getBroadcastStatsHandler,
 );
 router.get(
   '/admin/telegram/broadcasts/:id',

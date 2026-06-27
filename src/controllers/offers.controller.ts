@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import fs from "fs";
 import {
     createOffer,
     getOffers,
@@ -10,8 +11,13 @@ import {
     deleteOffer,
     getUserOffers,
     filterOffersAndGetPaymentServices,
-    getOfferRanges
+    getOfferRanges,
+    getOfferFiles,
+    addOfferFiles,
+    getOfferFile,
+    deleteOfferFile
 } from "../services/offers.service";
+import { resolveUploadedFilePath } from "../utils/file-upload";
 import { __ } from "../utils/i18n";
 
 // Extend Request interface to include user
@@ -343,6 +349,97 @@ export const getOfferRangesHandler = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+const ensureOfferOwnership = async (req: AuthenticatedRequest, res: Response, offerId: number) => {
+    const existingOffer = await getOfferById(offerId);
+    if (req.user?.roleId !== 1 && req.user?.roleId !== 2 && existingOffer.ownerId !== req.user?.userId) {
+        res.status(403).json({
+            success: false,
+            message: __('offer.access_denied'),
+        });
+        return false;
+    }
+    return true;
+};
+
+export const getOfferFilesHandler = async (req: Request, res: Response) => {
+    try {
+        const files = await getOfferFiles(Number(req.params.id));
+        res.status(200).json({
+            success: true,
+            message: __('offer.files_retrieved_successfully'),
+            data: files,
+        });
+    } catch (error: any) {
+        const statusCode = error.message.includes('not found') ? 404 : 500;
+        res.status(statusCode).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+export const uploadOfferFilesHandler = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const offerId = Number(req.params.id);
+        if (!(await ensureOfferOwnership(req, res, offerId))) return;
+
+        const files = await addOfferFiles(offerId, req.body.files);
+        res.status(201).json({
+            success: true,
+            message: __('offer.file_uploaded_successfully'),
+            data: files,
+        });
+    } catch (error: any) {
+        const statusCode = error.message.includes('not found') ? 404 :
+                          error.message.includes('Unsupported') || error.message.includes('too large') ? 400 : 500;
+        res.status(statusCode).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+export const downloadOfferFileHandler = async (req: Request, res: Response) => {
+    try {
+        const file = await getOfferFile(Number(req.params.id), Number(req.params.fileId));
+        const absolutePath = resolveUploadedFilePath(file.fileUrl);
+
+        if (!fs.existsSync(absolutePath)) {
+            return res.status(404).json({
+                success: false,
+                message: __('offer.file_not_found'),
+            });
+        }
+
+        res.download(absolutePath, file.fileName);
+    } catch (error: any) {
+        const statusCode = error.message.includes('not found') ? 404 : 500;
+        res.status(statusCode).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+export const deleteOfferFileHandler = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const offerId = Number(req.params.id);
+        if (!(await ensureOfferOwnership(req, res, offerId))) return;
+
+        const result = await deleteOfferFile(offerId, Number(req.params.fileId));
+        res.status(200).json({
+            success: true,
+            message: result.message,
+        });
+    } catch (error: any) {
+        const statusCode = error.message.includes('not found') ? 404 : 500;
+        res.status(statusCode).json({
             success: false,
             message: error.message,
         });
