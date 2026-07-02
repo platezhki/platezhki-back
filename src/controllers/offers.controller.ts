@@ -73,7 +73,7 @@ export const getOffersHandler = async (req: Request, res: Response) => {
     }
 };
 
-export const getOfferByIdHandler = async (req: Request, res: Response) => {
+export const getOfferByIdHandler = async (req: AuthenticatedRequest, res: Response) => {
     try {
         // Get the ID directly from req.params
         const id = req.params.id;
@@ -93,7 +93,7 @@ export const getOfferByIdHandler = async (req: Request, res: Response) => {
             });
         }
 
-        const offer = await getOfferById(numericId);
+        const offer = await getOfferById(numericId, req.user?.userId);
 
         res.status(200).json({
             success: true,
@@ -109,7 +109,7 @@ export const getOfferByIdHandler = async (req: Request, res: Response) => {
     }
 };
 
-export const getOfferBySlugHandler = async (req: Request, res: Response) => {
+export const getOfferBySlugHandler = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const slug = req.params.slug;
 
@@ -120,7 +120,7 @@ export const getOfferBySlugHandler = async (req: Request, res: Response) => {
             });
         }
 
-        const offer = await getOfferBySlug(slug);
+        const offer = await getOfferBySlug(slug, req.user?.userId);
 
         res.status(200).json({
             success: true,

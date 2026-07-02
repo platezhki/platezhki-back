@@ -50,6 +50,7 @@ model User {
   emailVerifications   EmailVerification[]
   passwordReset        PasswordReset[]
   favorites            Favorite[]
+  offerSubscriptions   OfferSubscription[]
   telegramLinkTokens   TelegramLinkToken[]
   telegramBroadcasts   TelegramBroadcast[] @relation("TelegramBroadcastCreatedBy")
   telegramDeliveries   TelegramBroadcastDelivery[]
@@ -161,6 +162,7 @@ model Offer {
   settleSpeed        SettleSpeed              @relation(fields: [settleSpeedId], references: [id])
   parameters         OfferParameter[]
   files              OfferFile[]
+  subscriptions      OfferSubscription[]
 
   @@map("offers")
 }
@@ -562,6 +564,20 @@ model Favorite {
   @@index([userId])
   @@index([paymentServiceId])
   @@map("favorites")
+}
+
+model OfferSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  offerId   Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offer     Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, offerId])
+  @@index([userId])
+  @@index([offerId])
+  @@map("offer_subscriptions")
 }
 
 model TelegramLinkToken {

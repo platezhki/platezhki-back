@@ -4906,6 +4906,196 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /offers/subscriptions:
+    get:
+      summary: List offers the current user is subscribed to
+      tags: [Offer Subscriptions]
+      description: >
+        Returns the paginated list of active offers the user subscribed to for
+        update notifications. Requires authentication.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Items per page
+      responses:
+        '200':
+          description: Subscriptions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Subscriptions retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Offer'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /offers/{id}/subscribe:
+    get:
+      summary: Check subscription status for an offer
+      tags: [Offer Subscriptions]
+      description: Returns whether the current user is subscribed to the offer (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Subscription status retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      isSubscribed:
+                        type: boolean
+                        example: true
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Subscribe to an offer's update notifications
+      tags: [Offer Subscriptions]
+      description: >
+        Subscribe the current user to update notifications for a single offer.
+        Unlike favorites (which subscribe you to a whole payment service), this
+        only notifies about changes to this specific offer. Requires authentication.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '201':
+          description: Subscribed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Subscribed to offer update notifications"
+        '400':
+          description: Already subscribed to this offer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Unsubscribe from an offer's update notifications
+      tags: [Offer Subscriptions]
+      description: Remove the current user's subscription to an offer (requires authentication)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Offer ID
+      responses:
+        '200':
+          description: Unsubscribed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Unsubscribed from offer update notifications"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Offer subscription not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /me/telegram:
     get:
       summary: Get current user's Telegram connection status

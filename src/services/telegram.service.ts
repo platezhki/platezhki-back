@@ -436,30 +436,22 @@ export const diffOfferFields = (before: any, after: any): string[] => {
  */
 export const formatOfferUpdateMessage = (offer: any): { text: string; url: string | null } => {
   const base = formatNewOfferMessage(offer);
-  const text = base.text.replace('<b>Добавлен новый оффер</b>', '<b>Оффер обновлён</b>');
+  const text = base.text.replace('<b>Добавлен новый оффер</b>', '<b>В оффере изменились условия</b>');
   return { text, url: base.url };
 };
 
-/**
- * Select active, linked users who favorited any of the offer's payment
- * services and opted into offer-update notifications.
- */
 const selectOfferUpdateRecipients = async (
   offer: any,
 ): Promise<{ id: number; telegramChatId: string }[]> => {
-  const paymentServiceIds = (offer?.paymentServices || [])
-    .map((ps: any) => ps?.paymentService?.id ?? ps?.paymentServiceId)
-    .filter((id: any) => typeof id === 'number');
-
-  if (!paymentServiceIds.length) return [];
+  const offerId = offer?.id;
+  if (typeof offerId !== 'number') return [];
 
   const users = await prisma.user.findMany({
     where: {
       isActive: true,
       notificationsEnabled: true,
-      notifyOfferUpdates: true,
       telegramChatId: { not: null },
-      favorites: { some: { paymentServiceId: { in: paymentServiceIds } } },
+      offerSubscriptions: { some: { offerId } },
     },
     select: { id: true, telegramChatId: true },
   });
@@ -467,10 +459,6 @@ const selectOfferUpdateRecipients = async (
   return users.filter((u): u is { id: number; telegramChatId: string } => !!u.telegramChatId);
 };
 
-/**
- * Fire-and-forget dispatch of an offer-update notification to subscribers of
- * favorited payment services. No-op when no monitored field changed.
- */
 export const dispatchOfferUpdateNotifications = (offer: any, changedFields: string[]): void => {
   if (!isTelegramConfigured()) return;
   if (!offer || offer.isActive === false) return;

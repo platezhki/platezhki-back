@@ -224,6 +224,13 @@
     "not_found": "Платежная система не найдена в избранном",
     "retrieved_successfully": "Избранное успешно получено"
   },
+  "offer_subscriptions": {
+    "added_successfully": "Вы подписались на уведомления об изменениях оффера",
+    "removed_successfully": "Вы отписались от уведомлений об изменениях оффера",
+    "already_subscribed": "Вы уже подписаны на этот оффер",
+    "not_found": "Подписка на оффер не найдена",
+    "retrieved_successfully": "Подписки успешно получены"
+  },
   "telegram": {
     "broadcast_not_found": "Рассылка не найдена",
     "not_configured": "Telegram бот не настроен"

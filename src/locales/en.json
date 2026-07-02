@@ -251,6 +251,13 @@
     "not_found": "Payment service not found in favorites",
     "retrieved_successfully": "Favorites retrieved successfully"
   },
+  "offer_subscriptions": {
+    "added_successfully": "Subscribed to offer update notifications",
+    "removed_successfully": "Unsubscribed from offer update notifications",
+    "already_subscribed": "You are already subscribed to this offer",
+    "not_found": "Offer subscription not found",
+    "retrieved_successfully": "Subscriptions retrieved successfully"
+  },
   "telegram": {
     "broadcast_not_found": "Broadcast not found",
     "not_configured": "Telegram bot is not configured"

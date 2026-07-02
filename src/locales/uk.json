@@ -229,6 +229,13 @@
     "not_found": "Платіжну систему не знайдено в обраному",
     "retrieved_successfully": "Обране успішно отримано"
   },
+  "offer_subscriptions": {
+    "added_successfully": "Ви підписалися на сповіщення про зміни оферу",
+    "removed_successfully": "Ви відписалися від сповіщень про зміни оферу",
+    "already_subscribed": "Ви вже підписані на цей офер",
+    "not_found": "Підписку на офер не знайдено",
+    "retrieved_successfully": "Підписки успішно отримано"
+  },
   "telegram": {
     "broadcast_not_found": "Розсилку не знайдено",
     "not_configured": "Telegram бот не налаштовано"

@@ -30,6 +30,16 @@ import {
     uploadOfferFileSchema,
     offerFileParamsSchema
 } from "../schemas/offers.schema";
+import {
+    subscribeToOfferHandler,
+    unsubscribeFromOfferHandler,
+    isSubscribedToOfferHandler,
+    getUserSubscribedOffersHandler
+} from "../controllers/offer-subscriptions.controller";
+import {
+    subscribeToOfferSchema,
+    unsubscribeFromOfferSchema
+} from "../schemas/offer-subscriptions.schema";
 import { validateQuery, validateParams, validateBody } from "../middlewares/validate";
 import { authenticateToken, optionalAuth } from "../middlewares/auth";
 
@@ -38,11 +48,16 @@ const router = Router();
 // Public routes (no authentication required)
 router.get("/", validateQuery(getOffersSchema.shape.query), getOffersHandler);
 router.get("/ranges", getOfferRangesHandler);
-router.get("/slug/:slug", validateParams(getOfferBySlugSchema.shape.params), getOfferBySlugHandler);
+router.get("/slug/:slug", optionalAuth, validateParams(getOfferBySlugSchema.shape.params), getOfferBySlugHandler);
 router.get("/filter", optionalAuth, validateQuery(filterOffersSchema.shape.query), filterOffersHandler);
 
 // Private routes (authentication required) - specific routes first to avoid conflicts
 router.get("/my", authenticateToken, validateQuery(getUserOffersSchema.shape.query), getUserOffersHandler);
+
+router.get("/subscriptions", authenticateToken, validateQuery(getOffersSchema.shape.query), getUserSubscribedOffersHandler);
+router.get("/:id/subscribe", authenticateToken, validateParams(subscribeToOfferSchema.shape.params), isSubscribedToOfferHandler);
+router.post("/:id/subscribe", authenticateToken, validateParams(subscribeToOfferSchema.shape.params), subscribeToOfferHandler);
+router.delete("/:id/subscribe", authenticateToken, validateParams(unsubscribeFromOfferSchema.shape.params), unsubscribeFromOfferHandler);
 router.put("/", authenticateToken, validateBody(createOfferSchema.shape.body), createOfferHandler);
 router.post("/:id/activate", authenticateToken, validateParams(activateOfferSchema.shape.params), activateOfferHandler);
 router.post("/:id/deactivate", authenticateToken, validateParams(deactivateOfferSchema.shape.params), deactivateOfferHandler);
@@ -56,6 +71,6 @@ router.post("/:id/files", authenticateToken, validateParams(uploadOfferFileSchem
 router.delete("/:id/files/:fileId", authenticateToken, validateParams(offerFileParamsSchema.shape.params), deleteOfferFileHandler);
 
 // Public routes that need to be after specific routes to avoid conflicts
-router.get("/:id", validateParams(getOfferSchema.shape.params), getOfferByIdHandler);
+router.get("/:id", optionalAuth, validateParams(getOfferSchema.shape.params), getOfferByIdHandler);
 
 export default router;

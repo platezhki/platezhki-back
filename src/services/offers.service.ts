@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 const excludeFilters = ['page', 'limit'];
 
 // Constants for reusable include configurations
-const OFFER_INCLUDE_CONFIG = {
+export const OFFER_INCLUDE_CONFIG = {
   countries: {
     include: {country: true}
   },
@@ -167,7 +167,7 @@ const getOfferWithRelations = async (where: any) => {
 };
 
 // Helper function to transform offer data and remove duplicates
-const transformOffer = (offer: any) => {
+export const transformOffer = (offer: any) => {
   const {paymentServices, ...offerWithoutPaymentServices} = offer;
   const transformed = {
     ...offerWithoutPaymentServices,
@@ -427,7 +427,15 @@ export const getOffers = async (filters?: z.infer<typeof getOffersSchema>['query
   }
 };
 
-export const getOfferById = async (id: number) => {
+const withSubscriptionFlag = async (transformed: any, userId?: number) => {
+  if (!userId || !transformed?.id) return transformed;
+  const subscription = await prisma.offerSubscription.findUnique({
+    where: { userId_offerId: { userId, offerId: transformed.id } }
+  });
+  return { ...transformed, isSubscribed: !!subscription };
+};
+
+export const getOfferById = async (id: number, userId?: number) => {
   try {
     const offer = await getOfferWithRelations({id});
 
@@ -435,13 +443,13 @@ export const getOfferById = async (id: number) => {
       throw new Error(__('offer.not_found'));
     }
 
-    return transformOffer(offer);
+    return withSubscriptionFlag(transformOffer(offer), userId);
   } catch (error) {
     throw error;
   }
 };
 
-export const getOfferBySlug = async (slug: string) => {
+export const getOfferBySlug = async (slug: string, userId?: number) => {
   try {
     const offer = await getOfferWithRelations({slug});
 
@@ -449,7 +457,7 @@ export const getOfferBySlug = async (slug: string) => {
       throw new Error(__('offer.not_found'));
     }
 
-    return transformOffer(offer);
+    return withSubscriptionFlag(transformOffer(offer), userId);
   } catch (error) {
     throw error;
   }
@@ -540,7 +548,7 @@ export const updateOffer = async (id: number, data: any) => {
     // Get the final updated offer with all relations
     const finalOffer = await getOfferWithRelations({id});
 
-    // Notify subscribers of favorited payment services about meaningful
+    // Notify users subscribed to this specific offer about meaningful
     // changes. Skipped for inactive offers and when nothing material changed.
     if (finalOffer?.isActive && existingOffer.isActive) {
       const changedFields = diffOfferFields(existingOffer, finalOffer);
