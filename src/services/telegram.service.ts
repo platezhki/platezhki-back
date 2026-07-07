@@ -439,7 +439,14 @@ export const diffOfferFields = (before: any, after: any): string[] => {
 export const formatOfferUpdateMessage = (offer: any): { text: string; url: string | null } => {
   const base = formatNewOfferMessage(offer);
   const text = base.text.replace('<b>Добавлен новый оффер</b> ✅', '<b>В оффере изменились условия</b> 🔄');
-  return { text, url: base.url };
+
+  // For updates, deep-link to the specific offer that changed via ?offer=<id>.
+  let url = base.url;
+  if (url && typeof offer?.id === 'number') {
+    url += `${url.includes('?') ? '&' : '?'}offer=${offer.id}`;
+  }
+
+  return { text, url };
 };
 
 const selectOfferUpdateRecipients = async (
