@@ -245,12 +245,14 @@ const formatLimit = (min?: number | null, max?: number | null): string => {
 
 const yesNo = (value: boolean | null | undefined): string => (value ? 'Да' : 'Нет');
 
+const bold = (value: string): string => `<b>${value}</b>`;
+
 /**
  * Build the new-offer notification text. Lines for unavailable values are
  * omitted entirely (per spec: "only if available").
  */
 export const formatNewOfferMessage = (offer: any): { text: string; url: string | null } => {
-  const lines: string[] = ['<b>Добавлен новый оффер</b>', ''];
+  const lines: string[] = ['<b>Добавлен новый оффер</b> ✅', ''];
 
   const paymentService = offer?.paymentServices?.[0]?.paymentService;
   const paymentServiceName = paymentService?.name;
@@ -259,40 +261,40 @@ export const formatNewOfferMessage = (offer: any): { text: string; url: string |
     ? `${PUBLIC_SITE_BASE.replace(/\/$/, '')}/payment-method/${paymentServiceSlug}`
     : null;
 
-  if (paymentServiceName) lines.push(`Платежка: ${escapeHtml(paymentServiceName)}`);
-  if (offer?.name) lines.push(`Название оффера: ${escapeHtml(offer.name)}`);
+  if (paymentServiceName) lines.push(`Платежка: ${bold(escapeHtml(paymentServiceName))}`);
+  if (offer?.name) lines.push(`Название оффера: ${bold(escapeHtml(offer.name))}`);
 
   const countryNames = (offer?.countries || [])
     .map((c: any) => c?.country?.name || c?.name)
     .filter(Boolean);
-  if (countryNames.length) lines.push(`Гео: ${escapeHtml(countryNames.join(', '))}`);
+  if (countryNames.length) lines.push(`Гео: ${bold(escapeHtml(countryNames.join(', ')))}`);
 
   const methodNames = (offer?.paymentMethods || [])
     .map((pm: any) => pm?.paymentMethod?.name || pm?.name)
     .filter(Boolean);
-  if (methodNames.length) lines.push(`Метод: ${escapeHtml(methodNames.join(', '))}`);
+  if (methodNames.length) lines.push(`Метод: ${bold(escapeHtml(methodNames.join(', ')))}`);
 
   if (typeof offer?.payInFee === 'number' && offer.payInFee > 0) {
-    lines.push(`Pay-in (Fee): ${offer.payInFee}%`);
+    lines.push(`Pay-in (Fee): ${bold(`${offer.payInFee}%`)}`);
   }
   if (typeof offer?.payOutFee === 'number' && offer.payOutFee > 0) {
-    lines.push(`Pay-out (Fee): ${offer.payOutFee}%`);
+    lines.push(`Pay-out (Fee): ${bold(`${offer.payOutFee}%`)}`);
   }
 
   const payInLimits = formatLimit(offer?.payInMinLimit, offer?.payInMaxLimit);
-  if (payInLimits) lines.push(`Pay-in (Limits): ${payInLimits}`);
+  if (payInLimits) lines.push(`Pay-in (Limits): ${bold(payInLimits)}`);
 
   const payOutLimits = formatLimit(offer?.payOutMinLimit, offer?.payOutMaxLimit);
-  if (payOutLimits) lines.push(`Pay-out (Limits): ${payOutLimits}`);
+  if (payOutLimits) lines.push(`Pay-out (Limits): ${bold(payOutLimits)}`);
 
   if (typeof offer?.support247 === 'boolean') {
-    lines.push(`Поддержка 24/7: ${yesNo(offer.support247)}`);
+    lines.push(`Поддержка 24/7: ${bold(yesNo(offer.support247))}`);
   }
   if (typeof offer?.legalPerson === 'boolean') {
-    lines.push(`Юридическое лицо: ${yesNo(offer.legalPerson)}`);
+    lines.push(`Юридическое лицо: ${bold(yesNo(offer.legalPerson))}`);
   }
   if (typeof offer?.automatics === 'boolean') {
-    lines.push(`Автоматика: ${yesNo(offer.automatics)}`);
+    lines.push(`Автоматика: ${bold(yesNo(offer.automatics))}`);
   }
 
   return { text: lines.join('\n'), url };
@@ -436,7 +438,7 @@ export const diffOfferFields = (before: any, after: any): string[] => {
  */
 export const formatOfferUpdateMessage = (offer: any): { text: string; url: string | null } => {
   const base = formatNewOfferMessage(offer);
-  const text = base.text.replace('<b>Добавлен новый оффер</b>', '<b>В оффере изменились условия</b>');
+  const text = base.text.replace('<b>Добавлен новый оффер</b> ✅', '<b>В оффере изменились условия</b> 🔄');
   return { text, url: base.url };
 };
 

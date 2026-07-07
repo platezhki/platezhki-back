@@ -434,7 +434,7 @@ components:
       properties:
         file:
           type: string
-          description: Base64-encoded file content (optionally with a data URL prefix). Allowed types pdf/xls/xlsx, max 2 MB.
+          description: Base64-encoded file content (optionally with a data URL prefix). Allowed types pdf/xls/xlsx, max 10 MB.
           example: "data:application/pdf;base64,JVBERi0xLjQ..."
         fileName:
           type: string
@@ -567,7 +567,7 @@ components:
             $ref: '#/components/schemas/OfferParameterInput'
         files:
           type: array
-          description: Files to attach on creation (base64). Allowed types pdf/xls/xlsx, max 2 MB each.
+          description: Files to attach on creation (base64). Allowed types pdf/xls/xlsx, max 10 MB each.
           items:
             $ref: '#/components/schemas/OfferFileInput'
         countries:
@@ -1177,7 +1177,7 @@ components:
             $ref: '#/components/schemas/OfferParameterInput'
         files:
           type: array
-          description: Additional files to attach (base64). Appended to existing files. Allowed types pdf/xls/xlsx, max 2 MB each.
+          description: Additional files to attach (base64). Appended to existing files. Allowed types pdf/xls/xlsx, max 10 MB each.
           items:
             $ref: '#/components/schemas/OfferFileInput'
         trafficVolumeMin:
@@ -3405,7 +3405,7 @@ paths:
     post:
       summary: Upload offer files
       tags: [Offers]
-      description: Uploads one or more base64 files (pdf/xls/xlsx, max 2 MB each) to an offer. Requires authentication and ownership or admin role.
+      description: Uploads one or more base64 files (pdf/xls/xlsx, max 10 MB each) to an offer. Requires authentication and ownership or admin role.
       security:
         - bearerAuth: []
       parameters:

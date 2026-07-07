@@ -37,7 +37,7 @@ export const saveBase64Files = (files: Array<{file: string, fileName: string}>, 
 };
 
 const ALLOWED_DOCUMENT_EXTENSIONS = ['.pdf', '.xls', '.xlsx'];
-const MAX_DOCUMENT_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024;
 
 export interface SavedDocument {
     fileName: string;
@@ -69,7 +69,7 @@ export const saveBase64Document = (
 
     const sizeInBytes = Buffer.byteLength(base64String, 'base64');
     if (sizeInBytes > MAX_DOCUMENT_SIZE_BYTES) {
-        throw new Error('File is too large. Maximum allowed size is 2 MB');
+        throw new Error('File is too large. Maximum allowed size is 10 MB');
     }
 
     const fullUploadDir = path.join(process.cwd(), 'public', uploadDir);
