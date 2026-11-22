@@ -53,7 +53,7 @@ export const isTelegramConfigured = (): boolean => {
 
 export const buildStartLink = (token: string): string => {
   const username = getBotUsername();
-  return `https://t.me/${username}?start=${encodeURIComponent(token)}`;
+  return `https://telegram.me/${username}?start=${encodeURIComponent(token)}`;
 };
 
 const callMethod = async <T = any>(method: string, body: Record<string, any>): Promise<{ ok: boolean; status: number; data: any }> => {

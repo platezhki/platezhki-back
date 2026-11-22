@@ -280,9 +280,6 @@ components:
         support247:
           type: boolean
           example: true
-        automatics:
-          type: boolean
-          example: false
         legalPerson:
           type: boolean
           example: true
@@ -527,21 +524,7 @@ components:
       type: object
       required:
         - name
-        - countries
-        - currencies
-        - paymentSystemTypes
-        - trafficVolumeMin
-        - trafficVolumeMax
-        - payInFee
-        - payOutFee
-        - payInMinLimit
-        - payInMaxLimit
-        - payOutMinLimit
-        - payOutMaxLimit
-        - support247
-        - automatics
-        - trafficSources
-        - trafficTypes
+        - description
       properties:
         name:
           type: string
@@ -627,9 +610,6 @@ components:
         support247:
           type: boolean
           example: true
-        automatics:
-          type: boolean
-          example: false
         legalPerson:
           type: boolean
           example: true
@@ -903,16 +883,16 @@ components:
           type: string
           nullable: true
           description: Telegram deep link; present only when not connected.
-          example: https://t.me/Platezhki_Bot?start=ab12cd34
+          example: https://telegram.me/Platezhki_Bot?start=ab12cd34
         deepLink:
           type: string
           nullable: true
-          example: https://t.me/Platezhki_Bot?start=ab12cd34
+          example: https://telegram.me/Platezhki_Bot?start=ab12cd34
         qrCodeData:
           type: string
           nullable: true
           description: String the front-end renders into a QR code.
-          example: https://t.me/Platezhki_Bot?start=ab12cd34
+          example: https://telegram.me/Platezhki_Bot?start=ab12cd34
         expiresAt:
           type: string
           format: date-time
@@ -1197,8 +1177,6 @@ components:
         payOutMaxLimit:
           type: number
         support247:
-          type: boolean
-        automatics:
           type: boolean
         legalPerson:
           type: boolean
@@ -2856,13 +2834,6 @@ paths:
               type: integer
         - in: query
           name: support247
-          schema:
-            type: array
-            items:
-              type: integer
-              enum: [1, 2]
-        - in: query
-          name: automatics
           schema:
             type: array
             items:
@@ -5190,7 +5161,7 @@ paths:
                         properties:
                           startLink:
                             type: string
-                            example: https://t.me/Platezhki_Bot?start=ab12cd34
+                            example: https://telegram.me/Platezhki_Bot?start=ab12cd34
                           expiresAt:
                             type: string
                             format: date-time

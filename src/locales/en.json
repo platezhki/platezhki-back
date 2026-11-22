@@ -95,7 +95,6 @@
     "payout_min_limit_invalid": "Pay-out minimum limit must be 0 or greater",
     "payout_max_limit_invalid": "Pay-out maximum limit must be 0 or greater",
     "support247_required": "24/7 support field is required",
-    "automatics_required": "Automatics field is required",
     "legal_person_required": "Legal person field is required",
     "is_active_required": "Active status field is required",
     "payin_max_fee_gte_min": "Pay-in maximum fee must be greater than or equal to minimum fee",

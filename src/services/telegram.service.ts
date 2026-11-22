@@ -247,12 +247,43 @@ const yesNo = (value: boolean | null | undefined): string => (value ? 'Да' : '
 
 const bold = (value: string): string => `<b>${value}</b>`;
 
+const toNumber = (value: any): number | null => {
+  if (value == null) return null;
+  const n = typeof value === 'bigint' ? Number(value) : Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+/**
+ * Build a visibility checker from an offer's `fieldSettings`.
+ *
+ * `fieldSettings` is a `{ key, visible }[]` list configured on the offer. A
+ * predefined field is hidden only when a matching key is present with
+ * `visible === false`; if no matching key exists we default to showing the
+ * field (safer than hiding a field whose key we don't recognise). Keys are
+ * matched case-insensitively and each field is probed against a few aliases
+ * so we tolerate small naming differences from the client.
+ */
+const buildVisibilityChecker = (fieldSettings: any): ((...keys: string[]) => boolean) => {
+  const hidden = new Set<string>();
+  if (Array.isArray(fieldSettings)) {
+    for (const fs of fieldSettings) {
+      if (fs && typeof fs.key === 'string' && fs.visible === false) {
+        hidden.add(fs.key.toLowerCase());
+      }
+    }
+  }
+  return (...keys: string[]) => !keys.some((k) => hidden.has(k.toLowerCase()));
+};
+
 /**
  * Build the new-offer notification text. Lines for unavailable values are
- * omitted entirely (per spec: "only if available").
+ * omitted entirely, fields hidden via `fieldSettings` are skipped, and any
+ * filled custom parameters (respecting their own visibility) are appended.
  */
 export const formatNewOfferMessage = (offer: any): { text: string; url: string | null } => {
   const lines: string[] = ['<b>Добавлен новый оффер</b> ✅', ''];
+
+  const isVisible = buildVisibilityChecker(offer?.fieldSettings);
 
   const paymentService = offer?.paymentServices?.[0]?.paymentService;
   const paymentServiceName = paymentService?.name;
@@ -264,37 +295,104 @@ export const formatNewOfferMessage = (offer: any): { text: string; url: string |
   if (paymentServiceName) lines.push(`Платежка: ${bold(escapeHtml(paymentServiceName))}`);
   if (offer?.name) lines.push(`Название оффера: ${bold(escapeHtml(offer.name))}`);
 
+  if (offer?.description && isVisible('description')) {
+    lines.push(`Описание: ${bold(escapeHtml(offer.description))}`);
+  }
+
   const countryNames = (offer?.countries || [])
     .map((c: any) => c?.country?.name || c?.name)
     .filter(Boolean);
-  if (countryNames.length) lines.push(`Гео: ${bold(escapeHtml(countryNames.join(', ')))}`);
+  if (countryNames.length && isVisible('geolocation', 'geo', 'countries', 'country')) {
+    lines.push(`Гео: ${bold(escapeHtml(countryNames.join(', ')))}`);
+  }
+
+  const currencyNames = (offer?.currencies || [])
+    .map((c: any) => c?.currency?.name || c?.currency?.code || c?.name || c?.code)
+    .filter(Boolean);
+  if (currencyNames.length && isVisible('currencies', 'currency')) {
+    lines.push(`Валюты: ${bold(escapeHtml(currencyNames.join(', ')))}`);
+  }
+
+  const paymentSystemNames = (offer?.paymentSystemTypes || [])
+    .map((p: any) => p?.paymentSystemType?.name || p?.name)
+    .filter(Boolean);
+  if (paymentSystemNames.length && isVisible('paymentSystemTypes', 'paymentSystemType')) {
+    lines.push(`Платёжные системы: ${bold(escapeHtml(paymentSystemNames.join(', ')))}`);
+  }
 
   const methodNames = (offer?.paymentMethods || [])
     .map((pm: any) => pm?.paymentMethod?.name || pm?.name)
     .filter(Boolean);
-  if (methodNames.length) lines.push(`Метод: ${bold(escapeHtml(methodNames.join(', ')))}`);
+  if (methodNames.length && isVisible('paymentMethods', 'paymentMethod', 'methods', 'method')) {
+    lines.push(`Метод: ${bold(escapeHtml(methodNames.join(', ')))}`);
+  }
 
-  if (typeof offer?.payInFee === 'number' && offer.payInFee > 0) {
+  if (typeof offer?.payInFee === 'number' && offer.payInFee > 0 && isVisible('payInFee')) {
     lines.push(`Pay-in (Fee): ${bold(`${offer.payInFee}%`)}`);
   }
-  if (typeof offer?.payOutFee === 'number' && offer.payOutFee > 0) {
+  if (typeof offer?.payOutFee === 'number' && offer.payOutFee > 0 && isVisible('payOutFee')) {
     lines.push(`Pay-out (Fee): ${bold(`${offer.payOutFee}%`)}`);
   }
 
   const payInLimits = formatLimit(offer?.payInMinLimit, offer?.payInMaxLimit);
-  if (payInLimits) lines.push(`Pay-in (Limits): ${bold(payInLimits)}`);
+  if (payInLimits && isVisible('payInLimit', 'payInLimits', 'payInMinLimit', 'payInMaxLimit')) {
+    lines.push(`Pay-in (Limits): ${bold(payInLimits)}`);
+  }
 
   const payOutLimits = formatLimit(offer?.payOutMinLimit, offer?.payOutMaxLimit);
-  if (payOutLimits) lines.push(`Pay-out (Limits): ${bold(payOutLimits)}`);
+  if (payOutLimits && isVisible('payOutLimit', 'payOutLimits', 'payOutMinLimit', 'payOutMaxLimit')) {
+    lines.push(`Pay-out (Limits): ${bold(payOutLimits)}`);
+  }
 
-  if (typeof offer?.support247 === 'boolean') {
+  const trafficVolume = formatLimit(toNumber(offer?.trafficVolumeMin), toNumber(offer?.trafficVolumeMax));
+  if (trafficVolume && isVisible('trafficVolume', 'trafficVolumeMin', 'trafficVolumeMax')) {
+    lines.push(`Объём трафика: ${bold(trafficVolume)}`);
+  }
+
+  const trafficSourceNames = (offer?.trafficSources || [])
+    .map((t: any) => t?.trafficSource?.name || t?.name)
+    .filter(Boolean);
+  if (trafficSourceNames.length && isVisible('trafficSources', 'trafficSource')) {
+    lines.push(`Источники трафика: ${bold(escapeHtml(trafficSourceNames.join(', ')))}`);
+  }
+
+  const trafficTypeNames = (offer?.trafficTypes || [])
+    .map((t: any) => t?.trafficType?.name || t?.name)
+    .filter(Boolean);
+  if (trafficTypeNames.length && isVisible('trafficTypes', 'trafficType')) {
+    lines.push(`Типы трафика: ${bold(escapeHtml(trafficTypeNames.join(', ')))}`);
+  }
+
+  const connectionTypeNames = (offer?.connectionTypes || [])
+    .map((c: any) => c?.connectionType?.name || c?.name)
+    .filter(Boolean);
+  if (connectionTypeNames.length && isVisible('connectionTypes', 'connectionType')) {
+    lines.push(`Тип подключения: ${bold(escapeHtml(connectionTypeNames.join(', ')))}`);
+  }
+
+  const balanceTypeNames = (offer?.balanceTypes || [])
+    .map((b: any) => b?.balanceType?.name || b?.name)
+    .filter(Boolean);
+  if (balanceTypeNames.length && isVisible('balanceTypes', 'balanceType')) {
+    lines.push(`Тип баланса: ${bold(escapeHtml(balanceTypeNames.join(', ')))}`);
+  }
+
+  if (typeof offer?.support247 === 'boolean' && isVisible('support247')) {
     lines.push(`Поддержка 24/7: ${bold(yesNo(offer.support247))}`);
   }
-  if (typeof offer?.legalPerson === 'boolean') {
+  if (typeof offer?.legalPerson === 'boolean' && isVisible('legalPerson')) {
     lines.push(`Юридическое лицо: ${bold(yesNo(offer.legalPerson))}`);
   }
-  if (typeof offer?.automatics === 'boolean') {
-    lines.push(`Автоматика: ${bold(yesNo(offer.automatics))}`);
+
+  // Custom parameters. `merchantOnly` marks all params as merchant-facing only,
+  // so they are omitted from public subscriber notifications in that case.
+  if (!offer?.merchantOnly && Array.isArray(offer?.parameters)) {
+    const params = [...offer.parameters]
+      .filter((p: any) => p && p.isVisible !== false && p.name && p.value != null && String(p.value).trim() !== '')
+      .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+    for (const p of params) {
+      lines.push(`${escapeHtml(String(p.name))}: ${bold(escapeHtml(String(p.value)))}`);
+    }
   }
 
   return { text: lines.join('\n'), url };
@@ -413,7 +511,6 @@ const OFFER_UPDATE_FIELDS: { key: string; label: string; type: 'number' | 'perce
   { key: 'payOutMaxLimit', label: 'Pay-out (Max)', type: 'number' },
   { key: 'support247', label: 'Поддержка 24/7', type: 'bool' },
   { key: 'legalPerson', label: 'Юридическое лицо', type: 'bool' },
-  { key: 'automatics', label: 'Автоматика', type: 'bool' },
 ];
 
 /**

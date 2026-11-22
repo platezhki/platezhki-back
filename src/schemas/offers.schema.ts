@@ -23,50 +23,62 @@ const offerFileInputSchema = z.object({
 });
 
 export const createOfferSchema = z.object({
+  // New rules: only `name` and `description` are required. Everything else is
+  // optional and, when omitted, filled with sensible defaults by the service.
   body: z.object({
     name: z.string()
       .min(1, __("validation.name_required"))
       .max(255, __("validation.name_too_long")),
-    description: z.string().max(600, __("validation.description_too_long")).optional(),
+    description: z.string()
+      .min(1, __("validation.description_required"))
+      .max(600, __("validation.description_too_long")),
     merchantOnly: z.boolean().optional().default(false),
     fieldSettings: z.array(fieldSettingSchema).optional(),
     parameters: z.array(offerParameterSchema).optional(),
     files: z.array(offerFileInputSchema).optional(),
-    countries: z.array(z.number()).min(1, __("validation.countries_required")),
-    currencies: z.array(z.number()).min(1, __("validation.currencies_required")),
-    paymentSystemTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.payment_system_types_required")),
-    trafficVolumeMin: z.number().min(0, __("validation.traffic_volume_min_invalid")),
-    trafficVolumeMax: z.number().min(0, __("validation.traffic_volume_max_invalid")),
-    paymentMethods: numOrArray,
-    payInFee: z.number().min(0, __("validation.payin_fee_invalid")).max(100, __("validation.payin_fee_invalid")),
-    payOutFee: z.number().min(0, __("validation.payout_fee_invalid")).max(100, __("validation.payout_fee_invalid")),
-    payInMinLimit: z.number().min(0, __("validation.payin_min_limit_invalid")),
-    payInMaxLimit: z.number().min(0, __("validation.payin_max_limit_invalid")),
-    payOutMinLimit: z.number().min(0, __("validation.payout_min_limit_invalid")),
-    payOutMaxLimit: z.number().min(0, __("validation.payout_max_limit_invalid")),
-    support247: z.boolean(),
-    automatics: z.boolean(),
-    trafficSources: numOrArray.refine((arr) => arr.length > 0, __("validation.traffic_sources_required")),
-    trafficTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.traffic_types_required")),
-    connectionTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.connection_types_required")),
+    countries: z.array(z.number()).optional(),
+    currencies: z.array(z.number()).optional(),
+    paymentSystemTypes: numOrArray.optional(),
+    trafficVolumeMin: z.number().min(0, __("validation.traffic_volume_min_invalid")).optional(),
+    trafficVolumeMax: z.number().min(0, __("validation.traffic_volume_max_invalid")).optional(),
+    paymentMethods: numOrArray.optional(),
+    payInFee: z.number().min(0, __("validation.payin_fee_invalid")).max(100, __("validation.payin_fee_invalid")).optional(),
+    payOutFee: z.number().min(0, __("validation.payout_fee_invalid")).max(100, __("validation.payout_fee_invalid")).optional(),
+    payInMinLimit: z.number().min(0, __("validation.payin_min_limit_invalid")).optional(),
+    payInMaxLimit: z.number().min(0, __("validation.payin_max_limit_invalid")).optional(),
+    payOutMinLimit: z.number().min(0, __("validation.payout_min_limit_invalid")).optional(),
+    payOutMaxLimit: z.number().min(0, __("validation.payout_max_limit_invalid")).optional(),
+    support247: z.boolean().optional(),
+    trafficSources: numOrArray.optional(),
+    trafficTypes: numOrArray.optional(),
+    connectionTypes: numOrArray.optional(),
     balanceTypes: numOrArray.optional(),
-    legalPerson: z.boolean(),
+    legalPerson: z.boolean().optional(),
     isActive: z.boolean().optional().default(true),
     settleSpeedId: z.number().optional(),
   })
     .refine((data) => {
-      const pm1 = Array.isArray((data as any).paymentMethods) ? (data as any).paymentMethods : undefined;
-      return (pm1 && pm1.length > 0) ;
+      if (data.trafficVolumeMin !== undefined && data.trafficVolumeMax !== undefined) {
+        return data.trafficVolumeMax >= data.trafficVolumeMin;
+      }
+      return true;
     }, {
-      message: __("validation.payment_method_required"),
-      path: ["paymentMethods"]
-    }).refine((data) => data.trafficVolumeMax >= data.trafficVolumeMin, {
       message: __("validation.traffic_volume_max_gte_min"),
       path: ["trafficVolumeMax"]
-    }).refine((data) => data.payInMaxLimit >= data.payInMinLimit, {
+    }).refine((data) => {
+      if (data.payInMinLimit !== undefined && data.payInMaxLimit !== undefined) {
+        return data.payInMaxLimit >= data.payInMinLimit;
+      }
+      return true;
+    }, {
       message: __("validation.payin_max_limit_gte_min"),
       path: ["payInMaxLimit"]
-    }).refine((data) => data.payOutMaxLimit >= data.payOutMinLimit, {
+    }).refine((data) => {
+      if (data.payOutMinLimit !== undefined && data.payOutMaxLimit !== undefined) {
+        return data.payOutMaxLimit >= data.payOutMinLimit;
+      }
+      return true;
+    }, {
       message: __("validation.payout_max_limit_gte_min"),
       path: ["payOutMaxLimit"]
     }),
@@ -119,7 +131,6 @@ export const updateOfferSchema = z.object({
     payOutMinLimit: z.number().min(0, __("validation.payout_min_limit_invalid")).optional(),
     payOutMaxLimit: z.number().min(0, __("validation.payout_max_limit_invalid")).optional(),
     support247: z.boolean().optional(),
-    automatics: z.boolean().optional(),
     trafficSources: numOrArray.refine((arr) => arr.length > 0, __("validation.traffic_sources_required")).optional(),
     trafficTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.traffic_types_required")).optional(),
     connectionTypes: numOrArray.refine((arr) => arr.length > 0, __("validation.connection_types_required")).optional(),
@@ -235,7 +246,6 @@ export const filterOffersSchema = z.object({
     payOutMaxLimit: z.union([z.string().transform(val => parseInt(val)), z.number()]).optional(),
     payOutLimits: z.union([z.string().transform(val => parseInt(val)), z.number()]).optional(),
     support247: arrayOrSingle.optional(),
-    automatics: arrayOrSingle.optional(),
     trafficSources: arrayOrSingle.optional(),
     trafficTypes: arrayOrSingle.optional(),
     balanceTypes: arrayOrSingle.optional(),

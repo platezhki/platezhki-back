@@ -52,7 +52,7 @@ app.use((req, res, next) => {
         const stringValue = value as string;
 
         // Check if this is a boolean field
-        const booleanFields = ['legalPerson', 'support247', 'automatics'];
+        const booleanFields = ['legalPerson', 'support247'];
         const isBooleanField = booleanFields.includes(arrayName);
 
         if (stringValue === 'true' || stringValue === 'false') {

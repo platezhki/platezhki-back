@@ -168,7 +168,8 @@ const getOfferWithRelations = async (where: any) => {
 
 // Helper function to transform offer data and remove duplicates
 export const transformOffer = (offer: any) => {
-  const {paymentServices, ...offerWithoutPaymentServices} = offer;
+  // `automatics` is a retired field: keep the column in the DB but never expose it via the API.
+  const {paymentServices, automatics, ...offerWithoutPaymentServices} = offer;
   const transformed = {
     ...offerWithoutPaymentServices,
     // Convert BigInt fields to Number for JSON serialization
@@ -275,14 +276,13 @@ export const createOffer = async (data: any) => {
         payInMaxLimit: data.payInMaxLimit,
         payOutMinLimit: data.payOutMinLimit,
         payOutMaxLimit: data.payOutMaxLimit,
-        support247: data.support247,
+        support247: data.support247 ?? false,
         settleSpeedId,
         trafficSources: {create: trafficSources.map((trafficSourceId: number) => ({trafficSourceId}))},
         trafficTypes: {create: trafficTypes.map((trafficTypeId: number) => ({trafficTypeId}))},
         balanceTypes: {create: balanceTypes.map((balanceTypeId: number) => ({balanceTypeId}))},
         connectionTypes: {create: connectionTypes.map((connectionTypeId: number) => ({connectionTypeId}))},
-        legalPerson: data.legalPerson,
-        automatics: data.automatics,
+        legalPerson: data.legalPerson ?? false,
         slug,
         isActive: data.isActive ?? true,
         ownerId: data.ownerId,
@@ -501,7 +501,6 @@ export const updateOffer = async (id: number, data: any) => {
         payOutMinLimit: data.payOutMinLimit ?? existingOffer.payOutMinLimit,
         payOutMaxLimit: data.payOutMaxLimit ?? existingOffer.payOutMaxLimit,
         support247: data.support247 ?? existingOffer.support247,
-        automatics: data.automatics ?? existingOffer.automatics,
         legalPerson: data.legalPerson ?? existingOffer.legalPerson,
         isActive: data.isActive ?? existingOffer.isActive,
       }
@@ -943,14 +942,6 @@ export const filterOffersAndGetPaymentServices = async (filters?: z.infer<typeof
         support247: filters.support247.length === 1 ?
           filters.support247[0] :
           {in: filters.support247}
-      });
-    }
-
-    if (filters?.automatics && filters.automatics.length > 0) {
-      offerConditions.push({
-        automatics: filters.automatics.length === 1 ?
-          filters.automatics[0] :
-          {in: filters.automatics}
       });
     }
 

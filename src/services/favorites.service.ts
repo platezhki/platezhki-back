@@ -249,12 +249,6 @@ export const getUserFavorites = async (userId: number, filters?: z.infer<typeof 
       });
     }
 
-    if (filters?.automatics && filters.automatics.length > 0) {
-      offerConditions.push({
-        automatics: filters.automatics.length === 1 ? filters.automatics[0] : { in: filters.automatics }
-      });
-    }
-
     // Traffic and connection filters
     if (filters?.trafficSources && filters.trafficSources.length > 0) {
       offerConditions.push({

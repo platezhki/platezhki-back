@@ -139,7 +139,8 @@ model Offer {
   payOutMinLimit     Float?                   @default(0)
   payOutMaxLimit     Float?                   @default(0)
   support247         Boolean
-  automatics         Boolean
+  // Retired field: kept as a nullable column for historical data, no longer written or exposed by the API.
+  automatics         Boolean?
   legalPerson        Boolean
   isActive           Boolean                  @default(true)
   createdAt          DateTime                 @default(now())
