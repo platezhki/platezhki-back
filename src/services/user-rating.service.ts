@@ -9,7 +9,7 @@ export const createOrUpdateRating = async (raterId: number, ratedUserId: number,
             throw new Error(__('user_rating.cannot_rate_self'));
         }
 
-        const ratedUser = await prisma.user.findFirst({ where: { id: ratedUserId, isActive: true } });
+        const ratedUser = await prisma.user.findUnique({ where: { id: ratedUserId } });
         if (!ratedUser) {
             throw new Error(__('user.user_not_found'));
         }
