@@ -421,15 +421,10 @@ export const getUsersAdmin = async (query: {
       take: limit,
       include: {
         role: true,
+        // Admin list only needs basic service info (promotion toggle/filter);
+        // full relations are available via GET /payment-services/admin/user/:userId.
         paymentServices: {
-          include: {
-            countries: { include: { country: true } },
-            currencies: { include: { currency: true } },
-            paymentSystemTypes: { include: { paymentSystemType: true } },
-            payInMethods: { where: { methodType: 'payIn' }, include: { paymentMethod: true } },
-            payOutMethods: { where: { methodType: 'payOut' }, include: { paymentMethod: true } },
-            supportServiceLanguages: { include: { language: true } }
-          }
+          select: { id: true, name: true, slug: true, isPromoted: true }
         }
       },
     }),

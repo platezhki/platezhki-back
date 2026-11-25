@@ -123,6 +123,7 @@ model PaymentService {
   user                        User                              @relation("PaymentServiceOwner", fields: [userId], references: [id])
   favorites                   Favorite[]
 
+  @@index([ownerId], map: "payment_services_owner_id_idx")
   @@map("payment_services")
 }
 
